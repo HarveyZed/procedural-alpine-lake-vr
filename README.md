@@ -17,6 +17,8 @@ The world was built to match these 10 photos. They were only a visual target for
 | ![Reference 1](docs/refs/ref_01.webp) | ![Reference 2](docs/refs/ref_02.webp) | ![Reference 3](docs/refs/ref_03.webp) | ![Reference 4](docs/refs/ref_04.webp) | ![Reference 5](docs/refs/ref_05.webp) |
 | ![Reference 6](docs/refs/ref_06.webp) | ![Reference 7](docs/refs/ref_07.webp) | ![Reference 8](docs/refs/ref_08.webp) | ![Reference 9](docs/refs/ref_09.webp) | ![Reference 10](docs/refs/ref_10.webp) |
 
+The prompt that started it, together with these photos, is in [PROMPT.md](PROMPT.md).
+
 ## Stills
 
 | | | |
