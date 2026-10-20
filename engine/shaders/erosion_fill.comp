@@ -1,0 +1,46 @@
+// Depression filling (Planchon-Darboux): W = water/fill surface that drains to the map
+// border with a minimum slope uEps. Pits become flat-ish lakes that route water across
+// them. A per-cell route cap (mask.g) lowers the routing surface along breach paths so
+// the protected lake/tarn drain at their real water level instead of filling to the rim.
+// uInner Jacobi sweeps inside each shared-memory tile per dispatch.
+#include "erosion_common.glsl"
+layout(binding = 0) uniform sampler2D texH;     // rg = bedrock, loose
+layout(binding = 1) uniform sampler2D texM;     // g = route cap
+layout(binding = 0, r32f) uniform coherent image2D imgW;
+uniform float uEps;
+uniform int uInit;
+uniform int uInner;
+
+#define S1 (TS + 2)
+shared float sW[S1 * S1];
+shared float sR[S1 * S1];
+
+void main() {
+    ivec2 o = tileOrigin(1);
+    for (int i = int(gl_LocalInvocationIndex); i < S1 * S1; i += TS * TS) {
+        ivec2 q = o + ivec2(i % S1, i / S1);
+        if (inb(q)) {
+            float r = min(Htot(texH, q), texelFetch(texM, q, 0).g);
+            sR[i] = r;
+            sW[i] = onBorder(q) ? r : (uInit == 1 ? 1e9 : imageLoad(imgW, q).x);
+        } else {
+            sR[i] = 1e9;
+            sW[i] = 1e9;
+        }
+    }
+    barrier();
+    ivec2 l = ivec2(gl_LocalInvocationID.xy) + 1;
+    int li = l.y * S1 + l.x;
+    ivec2 p = o + l;
+    bool fixedCell = !inb(p) || onBorder(p);
+    float e = uEps * uCell;
+    for (int it = 0; it < uInner; it++) {
+        float m = 1e9;
+        for (int k = 0; k < 8; k++) m = min(m, sW[li + OFF[k].y * S1 + OFF[k].x] + e * DST[k]);
+        float nw = fixedCell ? sW[li] : max(sR[li], m);
+        barrier();
+        sW[li] = nw;
+        barrier();
+    }
+    if (inb(p)) imageStore(imgW, p, vec4(sW[li]));
+}

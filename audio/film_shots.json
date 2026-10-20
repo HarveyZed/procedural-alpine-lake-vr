@@ -1,0 +1,65 @@
+[
+  {
+    "index": 0,
+    "name": "forest",
+    "start": 0.0,
+    "end": 8.0,
+    "env": "forest"
+  },
+  {
+    "index": 1,
+    "name": "reveal",
+    "start": 8.0,
+    "end": 15.5,
+    "env": "reveal"
+  },
+  {
+    "index": 2,
+    "name": "skim",
+    "start": 15.5,
+    "end": 22.0,
+    "env": "lakeshore"
+  },
+  {
+    "index": 3,
+    "name": "waterfall",
+    "start": 22.0,
+    "end": 28.5,
+    "env": "waterfall"
+  },
+  {
+    "index": 4,
+    "name": "stream",
+    "start": 28.5,
+    "end": 35.0,
+    "env": "stream"
+  },
+  {
+    "index": 5,
+    "name": "meadow",
+    "start": 35.0,
+    "end": 41.5,
+    "env": "meadow"
+  },
+  {
+    "index": 6,
+    "name": "flyover",
+    "start": 41.5,
+    "end": 48.0,
+    "env": "high_view"
+  },
+  {
+    "index": 7,
+    "name": "peaks",
+    "start": 48.0,
+    "end": 54.0,
+    "env": "high_view"
+  },
+  {
+    "index": 8,
+    "name": "finale",
+    "start": 54.0,
+    "end": 60.0,
+    "env": "golden"
+  }
+]
