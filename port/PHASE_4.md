@@ -17,9 +17,10 @@ T1 bake_trees + bake_shadow drivers (P3 deferred them deliberately): extend bake
 T2 engine_vr/pano.py — PURE CPU, no imports from vulkan/engine: equirect_directions(w,h,
    yaw,pitch,roll)->(h,w,3) f32 per RUNBOOK §6 (lon [-pi,pi) across W, lat +pi/2..-pi/2 top-down,
    d=(cos lat*sin lon, sin lat, cos lat*cos lon) rotated by camera basis), texel_footprint(w,h)->
-   (h,) f32 = max(dLat, dLon*cos(lat)) (the gPixAng replacement), stereo_pair(eye_dirs_l,
-   eye_dirs_r, camera_right): origins ±0.032 m, PARALLEL projection (directions identical per
-   texel; only origin shifts), same-seed rule docstring for noise. Pure functions, numerically
+   (h,) f32 = max(dLat, dLon*cos(lat)) (the gPixAng replacement), stereo_pair(cam_pos, dirs,
+camera_right) -> (origin_l, origin_r, dirs): origins = cam_pos +/- 0.032 m along
+camera_right, PARALLEL projection - both eyes share the SAME dirs array unchanged
+(only origins shift); same-seed rule docstring for noise. Pure functions, numerically
    testable — gate_p4 will hammer them.
 T3 VR_PANO shader hook (the ONLY sanctioned shader edit): scene raymarch needs per-texel step
    epsilon. Mechanism is your choice (e.g. #ifdef VR_PANO branch sampling an R32F footprint
