@@ -100,4 +100,17 @@ parallel projection (no convergence), eye offsets ±0.032 m along camera-right, 
 - D1 Coder agents one-per-phase, serial. D2 No agent↔agent message relay; repo files are the
   contract. D3 Deliverable = VR-360 panos, not the film (user pivot). D4 Zero project execution
   post-P0; static gates + first-run protocol. D5 Toolchain workspace-local in tools/vk/.
-- D6 Backend: **PENDING P0** (MoltenVK vs wgpu-py; P0 report evidence → GC records verdict).
+- D6 (recorded post-P0, commit 99ea6e9, tag p0-pass): **Backend = A MoltenVK** (python `vulkan`
+  bindings; GLSL 450 → glslc → SPIR-V; `source tools/vk/env.sh` before any `import vulkan`).
+  Evidence: port/reports/phase0.md + gate_p0 PASS on independent GC run + GC-recomputed PSNR from
+  PPMs (A-vs-CPU-ref 98.06 dB, maxdiff 1/255; A↔B bit-identical; non-degenerate std≈50). GLSL +
+  glstrip survive verbatim; B (wgpu-py) kept as documented fallback (its 0.32.0 ABI/draw bugs are
+  in phase0 report §risks). Zero GPU runs resume now — P0 exemption consumed; erosion rg32f image
+  atomics-through-MoltenVK remains UNVERIFIED (hedge + verification step live in P5 first-run doc).
+- D7 Phase plan refined post-P0 (shader compile de-risk first; all static): **P1** shaders 430→450
+  + glstrip_vr.py + descriptor-binding injection + manifest.json (gate = every real program
+  variant compiles glslc→spirv-val with manifest↔SPIR-V reflection parity) → **P2** host
+  `engine_vr/gl_vr.py` + `gpuslot_vr` consuming P1 manifest (pattern base: spike/p0_a/run.py,
+  hw-proven boilerplate) → **P3** bake + erosion_vr + features/treemap → **P4** pano renderer
+  `vr.py` (§6 spec) + PNG/SBS writer → **P5** first-run protocol + VR packaging (ffmpeg
+  equirect/SBS/turntable).
