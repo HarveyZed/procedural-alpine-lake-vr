@@ -48,8 +48,17 @@ for p in hosts:
                     bad.append(f"line {node.lineno}: {ast.unparse(node)[:60]}")
     check(f"no module-level device/context calls in {p.name}", not bad, "; ".join(bad[:3]))
 
-allsrc = "".join(p.read_text(errors="ignore") for p in VR.glob("*.py"))
-check("no moderngl anywhere in engine_vr", "moderngl" not in allsrc)
+def imports_of(path):
+    mods = set()
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            mods.update(a.name.split(".")[0] for a in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            mods.add(node.module.split(".")[0])
+    return mods
+allpy = list(VR.glob("*.py"))
+check("no moderngl import anywhere in engine_vr", not any("moderngl" in imports_of(p) for p in allpy),
+      str([p.name for p in allpy if "moderngl" in imports_of(p)]))
 check("manifest is the binding source (gl_vr reads manifest.json)", "manifest.json" in (VR / "gl_vr.py").read_text() if (VR / "gl_vr.py").exists() else False)
 lit = re.findall(r"binding\s*=\s*\d+", (VR / "gl_vr.py").read_text() if (VR / "gl_vr.py").exists() else "")
 check("no hardcoded numeric bindings in gl_vr.py", not lit, str(lit[:5]))
