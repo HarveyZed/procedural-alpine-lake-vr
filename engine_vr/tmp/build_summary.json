@@ -2201,7 +2201,7 @@
    "call_site": "engine/render.py:287",
    "note": "kind pre-pass 4 (water) of Renderer.kpass",
    "mode": "reduced",
-   "glslc_seconds": 0.61,
+   "glslc_seconds": 0.62,
    "compiled": true,
    "validated": true,
    "port_stats": {
