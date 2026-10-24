@@ -1,0 +1,11 @@
+engine_vr/shaders_gen/scene_kind3_rock.frag:106: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/scene_kind3_rock.frag:619: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:943: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/scene_kind3_rock.frag:1773: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:2006: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:2117: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:2128: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:3957: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:5478: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_kind3_rock.frag:5580: error: 'binding' : sampler/texture/image requires layout(binding=X)
+10 errors generated.

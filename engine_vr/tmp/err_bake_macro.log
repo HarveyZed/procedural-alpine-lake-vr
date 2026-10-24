@@ -1,0 +1,5 @@
+engine_vr/shaders_gen/bake_macro.frag:53: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/bake_macro.frag:53: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/bake_macro.frag:53: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/bake_macro.frag:380: error: 'location' : SPIR-V requires location for user input/output
+4 errors generated.

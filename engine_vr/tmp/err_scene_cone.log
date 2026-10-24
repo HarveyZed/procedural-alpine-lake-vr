@@ -1,0 +1,8 @@
+engine_vr/shaders_gen/scene_cone.frag:106: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/scene_cone.frag:1346: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/scene_cone.frag:2134: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_cone.frag:2208: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_cone.frag:2319: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_cone.frag:3756: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/scene_cone.frag:4416: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+7 errors generated.

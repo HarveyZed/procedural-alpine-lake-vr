@@ -1,0 +1,183 @@
+#version 450
+// Fluvial routing + erosion balance (relaxed in place, uInner Jacobi sweeps per tile):
+// gathers drainage area A and sediment flux Qs from upslope neighbours along the
+// multiple-flow-direction weights (s_k / s_max)^p / n of the fill surface W (p grows with the
+// drainage area of the donor: dispersive on hillslopes, convergent in channels), then
+// evaluates the stream-power erosion / xi-q deposition balance of the cell:
+//     E = K * A^m * S^n            (detachment; loose material uKloose times easier)
+//     D = G * Qs_in / A            (deposition, Davy & Lague 2009)
+//     protected lakes (W > h and a deposition cap < 1e4): settle part of the incoming load,
+//     up to the cap; other pits pass their load on along the fill surface (no sinks)
+// Stores (A_out [m2], Qs_out [m3/step]) and net = E - D [m/step, + = removal].
+// With FLOW_ONLY defined: drainage area only (r32f image).
+// ---------------------------------------------------------------------------
+// erosion_common.glsl : shared helpers for the GPU erosion compute passes
+// Grid: texel (x = column = world x, y = row = world z), square cells of uCell m.
+// Height state texture: rg = (bedrock height, loose layer thickness) in meters.
+// All passes work on 16x16 tiles staged in shared memory with a 1-2 cell halo;
+// uShift alternates the tiling between dispatches so tile seams move around.
+// ---------------------------------------------------------------------------
+#define TS 16
+layout(local_size_x = TS, local_size_y = TS) in;
+
+// port(P1): the engine's loose pass uniforms, grouped into one block for Vulkan GLSL (unnamed instance -> members stay global)
+layout(std140, set=1, binding=0) uniform _p1_pass {
+    ivec2 uRes;
+    ivec2 uOffset;
+    ivec2 uShift;
+    float uCell;
+    float uP;
+    float uK;
+    float uMexp;
+    float uNexp;
+    float uG;
+    float uKloose;
+    float uMaxDep;
+    float uMaxEro;
+    float uHardK;
+    int uInner;
+    float uLakeTrap;
+    float uPitTrap;
+};
+
+      // grid size
+   // dispatch offset in tiles (for split dispatches)
+    // tiling shift in cells
+     // cell size in meters
+
+const ivec2 OFF[8] = ivec2[8](ivec2(1, 0), ivec2(-1, 0), ivec2(0, 1), ivec2(0, -1),
+                              ivec2(1, 1), ivec2(-1, 1), ivec2(1, -1), ivec2(-1, -1));
+const float DST[8] = float[8](1.0, 1.0, 1.0, 1.0, 1.41421356, 1.41421356, 1.41421356, 1.41421356);
+
+bool inb(ivec2 p) { return p.x >= 0 && p.y >= 0 && p.x < uRes.x && p.y < uRes.y; }
+bool onBorder(ivec2 p) { return p.x == 0 || p.y == 0 || p.x == uRes.x - 1 || p.y == uRes.y - 1; }
+float Htot(sampler2D t, ivec2 p) { vec2 v = texelFetch(t, p, 0).xy; return v.x + v.y; }
+// world cell of shared-tile entry (lx, ly) for a tile with halo `halo`
+ivec2 tileOrigin(int halo) { return (ivec2(gl_WorkGroupID.xy) + uOffset) * TS - uShift - halo; }
+
+layout(set=0, binding = 0) uniform sampler2D texH;   // rg = bedrock, loose
+layout(set=0, binding = 1) uniform sampler2D texW;   // fill surface
+layout(set=0, binding = 2) uniform sampler2D texM;   // r = erodibility, g = route cap, b = deposition cap, a = hardness
+layout(set=3, binding = 0, rg32f) uniform coherent image2D imgAcc;
+layout(set=3, binding = 1, r32f) uniform writeonly image2D imgNet;
+        // MFD exponent for large drainage areas (1.1 on hillslopes)
+        // stream power coefficient
+     // area exponent m
+     // slope exponent n
+        // deposition coefficient
+   // erodibility multiplier of loose material
+   // max deposition per step (m)
+   // max erosion per step (m)
+    // erodibility scales with hardness^-uHardK
+
+ // fraction of the incoming load settling per lake cell and step
+  // same for unprotected pits (closed depressions of the fill surface)
+
+#define S2 (TS + 4)
+#define S1 (TS + 2)
+shared float sW[S2 * S2];
+shared float sN[S1 * S1];
+shared float sX[S1 * S1];
+shared float sA[S1 * S1];
+shared float sE[S1 * S1];   // MFD exponent of the cell
+shared float sQ[S1 * S1];
+shared float sH[S1 * S1];
+
+void main() {
+    ivec2 o2 = tileOrigin(2);
+    for (int i = int(gl_LocalInvocationIndex); i < S2 * S2; i += TS * TS) {
+        ivec2 q = o2 + ivec2(i % S2, i / S2);
+        sW[i] = inb(q) ? texelFetch(texW, q, 0).x : 1e9;
+    }
+    barrier();
+    ivec2 o1 = o2 + 1;
+    for (int i = int(gl_LocalInvocationIndex); i < S1 * S1; i += TS * TS) {
+        ivec2 lq = ivec2(i % S1, i / S1);
+        ivec2 q = o1 + lq;
+        int j2 = (lq.y + 1) * S2 + lq.x + 1;
+        float n = 0.0, smax = 0.0;
+        vec4 a = inb(q) ? imageLoad(imgAcc, q) : vec4(0.0);
+        float pe = mix(1.1, uP, smoothstep(1e4, 1e6, a.x));
+        if (inb(q) && !onBorder(q)) {
+            float w0 = sW[j2];
+            for (int k = 0; k < 8; k++)
+                smax = max(smax, (w0 - sW[j2 + OFF[k].y * S2 + OFF[k].x]) / DST[k]);
+            if (smax > 0.0)
+                for (int k = 0; k < 8; k++) {
+                    float s = (w0 - sW[j2 + OFF[k].y * S2 + OFF[k].x]) / DST[k];
+                    if (s > 0.0) n += pow(s / smax, pe);
+                }
+        }
+        sN[i] = n;
+        sX[i] = smax;
+        sE[i] = pe;
+        sA[i] = a.x;
+        sQ[i] = a.y;
+        sH[i] = inb(q) ? Htot(texH, q) : 1e9;
+    }
+    barrier();
+
+    ivec2 l1 = ivec2(gl_LocalInvocationID.xy) + 1;
+    int i1 = l1.y * S1 + l1.x;
+    int i2 = (l1.y + 1) * S2 + l1.x + 1;
+    ivec2 p = o1 + l1;
+    bool ok = inb(p);
+    float w0 = sW[i2];
+    float f[8];
+    for (int k = 0; k < 8; k++) {
+        f[k] = 0.0;
+        ivec2 q = p + OFF[k];
+        if (!inb(q) || onBorder(q)) continue;
+        int j1 = i1 + OFF[k].y * S1 + OFF[k].x;
+        float wq = sW[i2 + OFF[k].y * S2 + OFF[k].x];
+        if (wq > w0 && sN[j1] > 0.0 && sX[j1] > 0.0)
+            f[k] = pow(((wq - w0) / DST[k]) / sX[j1], sE[j1]) / sN[j1];
+    }
+    float area = uCell * uCell;
+    float Amax = area * float(uRes.x) * float(uRes.y);   // the whole domain (guards against routing cycles)
+
+    float h = sH[i1];
+    float S = 0.0, hmin = h, hup = -1e9;
+    for (int k = 0; k < 8; k++) {
+        float hq = sH[i1 + OFF[k].y * S1 + OFF[k].x];
+        if (hq > 1e8) continue;
+        S = max(S, (h - hq) / (uCell * DST[k]));
+        hmin = min(hmin, hq);
+        if (f[k] > 0.0) hup = max(hup, hq);
+    }
+    vec4 M = ok ? texelFetch(texM, p, 0) : vec4(0.0, 1e9, 1e9, 1.0);
+    float hs = ok ? texelFetch(texH, p, 0).y : 0.0;
+    bool lake = w0 > h + 0.05;
+    float kk = (lake || !ok || onBorder(p)) ? 0.0 : uK * M.r * mix(pow(M.a, -uHardK), uKloose, smoothstep(0.0, 1.0, hs));
+    float Elim = min(0.5 * max(h - hmin, 0.0), uMaxEro);
+    float Sn = pow(max(S, 0.0), uNexp);
+    float A = sA[i1], Qout = sQ[i1], net = 0.0;
+    for (int it = 0; it < uInner; it++) {
+        float Ain = 0.0, Qin = 0.0;
+        for (int k = 0; k < 8; k++) {
+            int j1 = i1 + OFF[k].y * S1 + OFF[k].x;
+            Ain += f[k] * sA[j1];
+            Qin += f[k] * sQ[j1];
+        }
+        A = min(Ain + area, Amax);
+        float E = min(kk * pow(A, uMexp) * Sn, Elim);
+        float D;
+        // protected lake / tarn: settle part of the load up to the bed cap; other pits trap
+        // part of their load (they fill up towards the spill level: no persistent dry pits;
+        // anchoring is uplift-only, so there is no deposit-and-sink loop)
+        if (lake) D = M.b < 1e4 ? min(uLakeTrap * Qin / area, min(w0, M.b) - h) : min(uPitTrap * Qin / area, w0 - h);
+        else D = min(uG * Qin / A, min(Qin / area, 0.5 * (hup - h)));
+        D = clamp(D, 0.0, uMaxDep);
+        D = min(D, max(M.b - h, 0.0));
+        net = E - D;
+        Qout = max(Qin + net * area, 0.0);
+        barrier();
+        sA[i1] = A;
+        sQ[i1] = Qout;
+        barrier();
+    }
+    if (ok) {
+        imageStore(imgAcc, p, vec4(A, Qout, 0.0, 0.0));
+        imageStore(imgNet, p, vec4(net));
+    }
+}

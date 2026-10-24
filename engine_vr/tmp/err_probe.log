@@ -1,0 +1,3 @@
+engine_vr/shaders_gen/probe.frag:32: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/probe.frag:245: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+2 errors generated.

@@ -1,0 +1,166 @@
+// Fused step: (optional) apply the fluvial net change, then the hillslope processes
+//  * fluvial apply: erosion strips the loose layer first, then bedrock; deposition is loose
+//  * bedrock relaxation: rock whose gradient (Scharr, isotropic) is steeper than the critical
+//    slope fails and moves downslope, spread over all lower neighbours with weights
+//    (drop / distance)^uWexp (no D8 facets); a fraction uDebris arrives as loose debris.
+//    The critical slope depends on elevation: tan = uTbLow (forested lower walls, ~38 deg)
+//    below the treeline band [uTreeA, uTreeB], uTb * hardness^uHardExp (rock faces) above.
+//    Spikes / knife edges (drop to one neighbour > uSpikeK * critical) also relax.
+//  * rockfall weathering (above the treeline band [uRockA, uRockB]): exposed faces steeper
+//    than tan = uT1 shed loose rock (shielded by an existing loose cover, e-folding uCover)
+//  * loose material steeper than the angle of repose (tan = uTl) slides downslope,
+//    building talus aprons / cones; loose layers thicker than uLooseMax consolidate
+//    (the excess becomes bedrock: no sediment towers, no runaway sinks)
+// Ping-pong height texture; tracking image updated in place.
+#include "erosion_common.glsl"
+layout(binding = 0) uniform sampler2D texH;     // rg = bedrock, loose
+layout(binding = 1) uniform sampler2D texM;     // r = erodibility, a = rock hardness
+layout(binding = 2) uniform sampler2D texNet;   // fluvial net change (m/step, + = removal)
+layout(binding = 0, rg32f) uniform writeonly image2D imgH;
+layout(binding = 1, rg32f) uniform coherent image2D imgTrack;  // x thermal net deposit, y fluvial net deposit
+uniform int uApply;
+uniform float uTb, uCb;          // bedrock critical slope (rock), relaxation rate
+uniform float uTbLow;            // bedrock critical slope below the treeline band
+uniform float uHardExpLow;       // hardness exponent of the low critical slope
+uniform float uTreeA, uTreeB;    // elevation band of the low -> rock transition
+uniform float uRockA, uRockB;    // elevation band where rockfall starts
+uniform float uTl, uCl;          // loose repose slope, transport rate
+uniform float uT1, uR1, uCover;  // rockfall onset slope, rate (m/step per unit slope), shielding depth
+uniform float uDebris;
+uniform float uHardExp;         // critical angles scale with hardness^uHardExp
+uniform float uJitter;          // per-cell random variation of the critical angle
+uniform float uSpikeK;          // spike test: neighbour drop steeper than uSpikeK * critical
+uniform float uWexp;            // outflow weight exponent
+uniform float uLooseMax;        // max loose thickness (m)
+uniform float uCreep;           // soil creep (linear diffusion, fraction per step) below the treeline
+uniform float uCreepRock;       // creep factor above the treeline band (rock: little)
+uniform uint uSeed;
+
+#define S2 (TS + 4)
+#define S1 (TS + 2)
+shared float sh[S2 * S2];   // total height (after fluvial apply)
+shared float ss[S2 * S2];   // loose thickness (after fluvial apply)
+shared vec4 so[S1 * S1];    // (bedrock out, weight sum, loose out, unused)
+shared float sP[S1 * S1];   // rockfall production
+
+vec2 applyFluvial(ivec2 q) {
+    vec2 hh = texelFetch(texH, q, 0).xy;
+    if (uApply == 1) {
+        float net = texelFetch(texNet, q, 0).x;
+        if (net > 0.0) {
+            float r = min(hh.y, net);
+            hh.y -= r;
+            hh.x -= net - r;
+        } else {
+            hh.y -= net;
+        }
+    }
+    return hh;
+}
+
+void main() {
+    ivec2 o2 = tileOrigin(2);
+    for (int i = int(gl_LocalInvocationIndex); i < S2 * S2; i += TS * TS) {
+        ivec2 q = o2 + ivec2(i % S2, i / S2);
+        if (inb(q)) {
+            vec2 hh = applyFluvial(q);
+            sh[i] = hh.x + hh.y;
+            ss[i] = hh.y;
+        } else {
+            sh[i] = 1e9;
+            ss[i] = 0.0;
+        }
+    }
+    barrier();
+    ivec2 o1 = o2 + 1;
+    for (int i = int(gl_LocalInvocationIndex); i < S1 * S1; i += TS * TS) {
+        ivec2 lq = ivec2(i % S1, i / S1);
+        ivec2 q = o1 + lq;
+        int j2 = (lq.y + 1) * S2 + lq.x + 1;
+        vec4 r = vec4(0.0);
+        float P = 0.0;
+        if (inb(q)) {
+            vec4 M = texelFetch(texM, q, 0);
+            uint hsh = uint(q.x) * 0x9E3779B1u ^ (uint(q.y) * 0x85EBCA77u + uSeed);
+            hsh ^= hsh >> 15u; hsh *= 0x2c1b3c6du; hsh ^= hsh >> 12u; hsh *= 0x297a2d39u; hsh ^= hsh >> 15u;
+            float jit = 1.0 + uJitter * (float(hsh >> 8u) * (2.0 / 16777216.0) - 1.0);
+            float h = sh[j2];
+            float hf = pow(M.a, uHardExp) * jit;
+            float rock = smoothstep(uTreeA, uTreeB, h);
+            float Tb = mix(uTbLow * pow(M.a, uHardExpLow) * jit, uTb * hf, rock);
+            float hn[8];
+            float wsum = 0.0, sd = 0.0;
+            for (int k = 0; k < 8; k++) {
+                float v = sh[j2 + OFF[k].y * S2 + OFF[k].x];
+                v = v > 1e8 ? h : v;                     // grid edge: no gradient, no flow
+                hn[k] = v;
+                float s = (h - v) / (uCell * DST[k]);
+                sd = max(sd, s);
+                if (s > 0.0) wsum += pow(s, uWexp);
+            }
+            // OFF = (1,0) (-1,0) (0,1) (0,-1) (1,1) (-1,1) (1,-1) (-1,-1); Scharr 3-10-3
+            float gx = (10.0 * (hn[0] - hn[1]) + 3.0 * (hn[4] - hn[5]) + 3.0 * (hn[6] - hn[7])) / (32.0 * uCell);
+            float gy = (10.0 * (hn[2] - hn[3]) + 3.0 * (hn[4] - hn[6]) + 3.0 * (hn[5] - hn[7])) / (32.0 * uCell);
+            float sg = length(vec2(gx, gy));
+            float eb = max(max(sg - Tb, sd - uSpikeK * Tb), 0.0) * uCell;
+            float el = max(max(sg - uTl, sd - uSpikeK * uTl), 0.0) * uCell;
+            float m = M.r;
+            float ob = wsum > 0.0 ? m * uCb * 0.5 * eb : 0.0;
+            P = m * uR1 * smoothstep(uRockA, uRockB, h) * max(sg - uT1 * hf, 0.0) * exp(-ss[j2] / uCover);
+            float ol = wsum > 0.0 ? min(ss[j2] + P, max(uCl * 0.5 * el - ob, 0.0)) : 0.0;
+            r = vec4(ob, wsum, ol, 0.0);
+        }
+        so[i] = r;
+        sP[i] = P;
+    }
+    barrier();
+
+    ivec2 l1 = ivec2(gl_LocalInvocationID.xy) + 1;
+    int i1 = l1.y * S1 + l1.x;
+    int i2 = (l1.y + 1) * S2 + l1.x + 1;
+    ivec2 p = o1 + l1;
+    if (!inb(p)) return;
+    float h = sh[i2];
+    float inb_ = 0.0, inl = 0.0;
+    for (int k = 0; k < 8; k++) {
+        float hq = sh[i2 + OFF[k].y * S2 + OFF[k].x];
+        if (hq > 1e8) continue;
+        float sq = (hq - h) / (uCell * DST[k]);
+        if (sq <= 0.0) continue;
+        vec4 tq = so[i1 + OFF[k].y * S1 + OFF[k].x];
+        if (tq.y <= 0.0) continue;
+        float w = pow(sq, uWexp) / tq.y;
+        inb_ += tq.x * w;
+        inl += tq.z * w;
+    }
+    vec4 t0 = so[i1];
+    float P = sP[i1];
+    float hs0 = ss[i2];
+    float hb0 = h - hs0;
+    float hb = hb0 - t0.x - P + (1.0 - uDebris) * inb_;
+    float hs = max(hs0 + P - t0.z + uDebris * inb_ + inl, 0.0);
+    if (uCreep > 0.0) {
+        // soil creep: smooths the fine relief of the soil-mantled (forested) slopes into
+        // convex hillslopes between the gullies; rock above the treeline keeps its texture
+        float lap = 0.0, wsum2 = 0.0;
+        for (int k = 0; k < 8; k++) {
+            float hq = sh[i2 + OFF[k].y * S2 + OFF[k].x];
+            if (hq > 1e8) continue;
+            float w = k < 4 ? 1.0 : 0.25;          // isotropic 9-point stencil
+            lap += w * (hq - h);
+            wsum2 += w;
+        }
+        float cr = uCreep * mix(1.0, uCreepRock, smoothstep(uTreeA, uTreeB, h)) * texelFetch(texM, p, 0).r;
+        hb += cr * lap / max(wsum2, 1.0);
+    }
+    float xs = max(hs - uLooseMax, 0.0);   // consolidation of over-thick loose layers
+    hb += xs;
+    hs -= xs;
+    imageStore(imgH, p, vec4(hb, hs, 0.0, 0.0));
+    vec4 t = imageLoad(imgTrack, p);
+    if (uApply == 1) {
+        t.y -= texelFetch(texNet, p, 0).x;
+    }
+    t.x += inl + uDebris * inb_ - t0.z;
+    imageStore(imgTrack, p, t);
+}

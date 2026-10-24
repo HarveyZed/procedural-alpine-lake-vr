@@ -1,0 +1,30 @@
+PASS manifest.json exists
+PASS manifest has >= 12 programs (9 split + vs + bake/erosion/post floor) — 25
+FAIL compile+val+reflection parity scene_trace — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (1, 0)]
+FAIL compile+val+reflection parity scene_kind0_sky — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind1_terrain — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind2_tree — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind3_rock — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind4_water — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind5_cover — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind6_hero — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_kind7_flora — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (1, 0)]
+FAIL compile+val+reflection parity scene_cone — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (1, 0)]
+FAIL compile+val+reflection parity probe — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (1, 0)]
+FAIL compile+val+reflection parity bake_height — actual=[] declared=[(1, 0)]
+FAIL compile+val+reflection parity bake_near — actual=[] declared=[(0, 0), (1, 0)]
+FAIL compile+val+reflection parity bake_ao_far — actual=[] declared=[(0, 0), (0, 1), (1, 0)]
+FAIL compile+val+reflection parity bake_ao_near — actual=[] declared=[(0, 0), (0, 1), (1, 0)]
+FAIL compile+val+reflection parity bake_forest — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 0)]
+FAIL compile+val+reflection parity bake_relief — actual=[] declared=[(0, 0), (1, 0)]
+FAIL compile+val+reflection parity bake_macro — actual=[] declared=[(0, 0), (0, 1), (0, 2), (1, 0)]
+FAIL compile+val+reflection parity bake_trees — actual=[] declared=[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (1, 0)]
+FAIL compile+val+reflection parity bake_shadow — actual=[] declared=[(0, 0), (0, 1), (1, 0)]
+FAIL compile+val+reflection parity bake_features — actual=[] declared=[(0, 0), (1, 0)]
+FAIL compile+val+reflection parity erosion_fill — actual=[] declared=[(0, 0), (0, 1), (1, 0), (3, 0)]
+FAIL compile+val+reflection parity erosion_accum — actual=[] declared=[(0, 0), (0, 1), (0, 2), (1, 0), (3, 0), (3, 1)]
+FAIL compile+val+reflection parity erosion_accum_flow_only — actual=[] declared=[(0, 0), (0, 1), (0, 2), (1, 0), (3, 0)]
+FAIL compile+val+reflection parity erosion_hill — actual=[] declared=[(0, 0), (0, 1), (0, 2), (1, 0), (3, 0), (3, 1)]
+PASS glslc/spirv-val/spirv-dis all used on >=12 programs — 25
+
+GATE P1: FAIL (25)

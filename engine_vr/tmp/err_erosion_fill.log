@@ -1,0 +1,3 @@
+engine_vr/shaders_gen/erosion_fill.comp:15: error: 'location qualifier on input' : not supported in this stage: compute
+engine_vr/shaders_gen/erosion_fill.comp:15: error: 'location/component/index' : cannot declare a default, use a full declaration
+2 errors generated.

@@ -1,0 +1,6057 @@
+{
+ "glsl_version": 450,
+ "target_env": "vulkan1.2",
+ "generated_by": "engine_vr/build_p1.py (descriptor pass: engine_vr/glstrip_vr.py, a port of engine/glstrip.py)",
+ "toolchain": {
+  "glslc": "tools/vk/bin/glslc (shaderc 2024.3, glslang 11.1.0, spirv-tools 2024.4)",
+  "pipeline": "glslc --target-env=vulkan1.2 -> spirv-val -> spirv-dis"
+ },
+ "descriptor_conventions": {
+  "set_of_namespace": {
+   "0": "sampler (combined image sampler)",
+   "1": "uniform_block",
+   "2": "storage_block (the engine has none today)",
+   "3": "storage_image"
+  },
+  "binding_namespaces": [
+   "sampler (combined image sampler)",
+   "uniform_block",
+   "storage_block",
+   "storage_image"
+  ],
+  "allocation": "order of first appearance in the reduced source, each namespace from 0, skipping numbers an explicit binding already claims",
+  "deviation": "PHASE_1.md asks for layout(set=0, binding=N) plus separate per-namespace counters starting at 0 each: with one set those counters produce duplicate (set, binding) pairs, which no VkDescriptorSetLayoutBinding / wgpu bind-group layout accepts. Binding numbering is exactly as briefed; the namespace picks the set instead. Host: up to 4 sets per pipeline, all stages, one buffer at set 1 binding 0 shared by every pass of a frame.",
+  "uniform_block": {
+   "name": "_p1_pass",
+   "storage": "std140",
+   "note": "the engine's loose non-opaque uniforms, regrouped verbatim into one block with an unnamed instance (members keep their global names); bind it as ONE std140 buffer - uniform_block.members gives the byte layout the host must pack"
+  }
+ },
+ "shared_stages": {
+  "vertex_fullscreen": {
+   "source": "engine_vr/shaders_gen/_fullscreen.vert",
+   "stage": "vert",
+   "engine_source": "engine/gl.py:12 VS (one shared stage for every gl.Pass)",
+   "compiled": true,
+   "validated": true,
+   "reflected_pairs": [],
+   "vertex_inputs": [
+    {
+     "name": "in_pos",
+     "location": 0,
+     "type": "vec2"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "gl_Position",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "note": "no descriptors: a program with zero bindings can never satisfy gate_p1's len(actual) > 0, so it is listed here instead of in programs[]"
+  }
+ },
+ "programs": [
+  {
+   "name": "scene_trace",
+   "source": "engine_vr/shaders_gen/scene_trace.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "99"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uCone",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:286",
+   "note": "main path-tracing pass, 2 colour targets (Renderer: targets=2)",
+   "mode": "reduced",
+   "glslc_seconds": 0.23,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 15,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_trace.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    },
+    {
+     "name": "fragInfo",
+     "location": 1,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind0_sky",
+   "source": "engine_vr/shaders_gen/scene_kind0_sky.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "0"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 0 (sky) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.1,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind0_sky.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind1_terrain",
+   "source": "engine_vr/shaders_gen/scene_kind1_terrain.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 1 (terrain) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.29,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind1_terrain.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind2_tree",
+   "source": "engine_vr/shaders_gen/scene_kind2_tree.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "2"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 2 (tree) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.16,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind2_tree.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind3_rock",
+   "source": "engine_vr/shaders_gen/scene_kind3_rock.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "3"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 3 (rock) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.2,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind3_rock.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind4_water",
+   "source": "engine_vr/shaders_gen/scene_kind4_water.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "4"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 4 (water) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.61,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind4_water.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind5_cover",
+   "source": "engine_vr/shaders_gen/scene_kind5_cover.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "5"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 5 (cover) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.24,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind5_cover.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind6_hero",
+   "source": "engine_vr/shaders_gen/scene_kind6_hero.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "6"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 6 (hero) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.14,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind6_hero.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_kind7_flora",
+   "source": "engine_vr/shaders_gen/scene_kind7_flora.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "7"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:287",
+   "note": "kind pre-pass 7 (flora) of Renderer.kpass",
+   "mode": "reduced",
+   "glslc_seconds": 0.14,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_kind7_flora.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_cone",
+   "source": "engine_vr/shaders_gen/scene_cone.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "98"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "engine/render.py:289",
+   "note": "cone pre-pass (perf4)",
+   "mode": "reduced",
+   "glslc_seconds": 0.16,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 14,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_cone.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "probe",
+   "source": "engine_vr/shaders_gen/probe.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/probe.frag",
+   "call_site": "engine/render.py:290",
+   "note": "sky irradiance / sun colour probe",
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 18,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 12,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/probe.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 1040,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uProbePos",
+      "type": "vec3",
+      "offset": 640
+     },
+     {
+      "name": "uAmbBoost",
+      "type": "float",
+      "offset": 652
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 656
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_height",
+   "source": "engine_vr/shaders_gen/bake_height.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_height.frag",
+   "call_site": "engine/bake.py:56",
+   "note": null,
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 4,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 0,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_height.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 20,
+    "members": [
+     {
+      "name": "uCenter",
+      "type": "vec2",
+      "offset": 0
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 8
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uFine",
+      "type": "int",
+      "offset": 16
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_near",
+   "source": "engine_vr/shaders_gen/bake_near.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_near.frag",
+   "call_site": "engine/bake.py:215",
+   "note": null,
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 5,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 1,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_near.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 24,
+    "members": [
+     {
+      "name": "uFarHalf",
+      "type": "float",
+      "offset": 0
+     },
+     {
+      "name": "uFarRes",
+      "type": "float",
+      "offset": 4
+     },
+     {
+      "name": "uCenter",
+      "type": "vec2",
+      "offset": 8
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 16
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 20
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_ao_far",
+   "source": "engine_vr/shaders_gen/bake_ao_far.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_ao.frag",
+   "call_site": "engine/bake.py:592",
+   "note": "far height map at res/2",
+   "mode": "reduced",
+   "glslc_seconds": 0.04,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 5,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 2,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_ao_far.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 24,
+    "members": [
+     {
+      "name": "uCenter",
+      "type": "vec2",
+      "offset": 0
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 8
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uFarHalf",
+      "type": "float",
+      "offset": 16
+     },
+     {
+      "name": "uStep0",
+      "type": "float",
+      "offset": 20
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_ao_near",
+   "source": "engine_vr/shaders_gen/bake_ao_near.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_ao.frag",
+   "call_site": "engine/bake.py:596",
+   "note": "near height map",
+   "mode": "reduced",
+   "glslc_seconds": 0.04,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 5,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 2,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_ao_near.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 24,
+    "members": [
+     {
+      "name": "uCenter",
+      "type": "vec2",
+      "offset": 0
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 8
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uFarHalf",
+      "type": "float",
+      "offset": 16
+     },
+     {
+      "name": "uStep0",
+      "type": "float",
+      "offset": 20
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_forest",
+   "source": "engine_vr/shaders_gen/bake_forest.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTalus",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uFlow",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uCones",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_forest.frag",
+   "call_site": "engine/bake.py:710",
+   "note": null,
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 9,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 5,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_forest.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 2100,
+    "members": [
+     {
+      "name": "uHasErosion",
+      "type": "int",
+      "offset": 0
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 4
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 8
+     },
+     {
+      "name": "uTarn",
+      "type": "vec2",
+      "offset": 16
+     },
+     {
+      "name": "uTarnLevel",
+      "type": "float",
+      "offset": 24
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 32
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 1568
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 1584
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 2096
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_relief",
+   "source": "engine_vr/shaders_gen/bake_relief.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/_bake_relief.frag",
+   "call_site": "engine/bake.py:533",
+   "note": "source is bake.RELIEF_FRAG written to CACHE/_bake_relief.frag; #define RELIEF_PASS is in-source",
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 6,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 1,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_relief.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 1572,
+    "members": [
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 0
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 4
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 1552
+     },
+     {
+      "name": "uTarn",
+      "type": "vec2",
+      "offset": 1560
+     },
+     {
+      "name": "uDbg",
+      "type": "int",
+      "offset": 1568
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_macro",
+   "source": "engine_vr/shaders_gen/bake_macro.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uL",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uB",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/_bake_macro.frag",
+   "call_site": "engine/bake.py:303",
+   "note": "source is bake.MACRO_FRAG written to CACHE/_bake_macro.frag; #define MACRO_PASS is in-source",
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 3,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 1,
+    "samplers": 3,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_macro.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 12,
+    "members": [
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 0
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 4
+     },
+     {
+      "name": "uDbg",
+      "type": "int",
+      "offset": 8
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_trees",
+   "source": "engine_vr/shaders_gen/bake_trees.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_trees.frag",
+   "call_site": "engine/render.py:168",
+   "note": null,
+   "mode": "reduced",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 5,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 12,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_trees.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 536,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_shadow",
+   "source": "engine_vr/shaders_gen/bake_shadow.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_shadow.frag",
+   "call_site": "engine/render.py:188",
+   "note": null,
+   "mode": "reduced",
+   "glslc_seconds": 0.04,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 5,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 2,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_shadow.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 44,
+    "members": [
+     {
+      "name": "uCenter",
+      "type": "vec2",
+      "offset": 0
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 8
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uFarHalf",
+      "type": "float",
+      "offset": 16
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 32
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "bake_features",
+   "source": "engine_vr/shaders_gen/bake_features.frag",
+   "stage": "frag",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/bake_features.frag",
+   "call_site": "engine/features.py:253",
+   "note": null,
+   "mode": "reduced",
+   "glslc_seconds": 0.06,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 8,
+    "locations_injected": 1,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 1,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/bake_features.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 1604,
+    "members": [
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 0
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 16
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 32
+     },
+     {
+      "name": "uCenter",
+      "type": "vec2",
+      "offset": 48
+     },
+     {
+      "name": "uHalf",
+      "type": "float",
+      "offset": 56
+     },
+     {
+      "name": "uRes",
+      "type": "float",
+      "offset": 60
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 64
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 1600
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "erosion_fill",
+   "source": "engine_vr/shaders_gen/erosion_fill.comp",
+   "stage": "comp",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "texH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texM",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "imgW",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 0,
+     "glsl_type": "image2D",
+     "explicit_binding": true
+    }
+   ],
+   "engine_source": "engine/shaders/erosion_fill.comp",
+   "call_site": "engine/erosion.py:170",
+   "note": null,
+   "mode": "resolved",
+   "glslc_seconds": 0.04,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 7,
+    "locations_injected": 0,
+    "explicit_bindings": 3,
+    "split_declarations": 0,
+    "samplers": 2,
+    "images": 1,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/erosion_fill.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 40,
+    "members": [
+     {
+      "name": "uRes",
+      "type": "ivec2",
+      "offset": 0
+     },
+     {
+      "name": "uOffset",
+      "type": "ivec2",
+      "offset": 8
+     },
+     {
+      "name": "uShift",
+      "type": "ivec2",
+      "offset": 16
+     },
+     {
+      "name": "uCell",
+      "type": "float",
+      "offset": 24
+     },
+     {
+      "name": "uEps",
+      "type": "float",
+      "offset": 28
+     },
+     {
+      "name": "uInit",
+      "type": "int",
+      "offset": 32
+     },
+     {
+      "name": "uInner",
+      "type": "int",
+      "offset": 36
+     }
+    ]
+   },
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "erosion_accum",
+   "source": "engine_vr/shaders_gen/erosion_accum.comp",
+   "stage": "comp",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "texH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texW",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texM",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "imgAcc",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 0,
+     "glsl_type": "image2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "imgNet",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 1,
+     "glsl_type": "image2D",
+     "explicit_binding": true
+    }
+   ],
+   "engine_source": "engine/shaders/erosion_accum.comp",
+   "call_site": "engine/erosion.py:170",
+   "note": null,
+   "mode": "resolved",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 16,
+    "locations_injected": 0,
+    "explicit_bindings": 5,
+    "split_declarations": 0,
+    "samplers": 3,
+    "images": 2,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/erosion_accum.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 76,
+    "members": [
+     {
+      "name": "uRes",
+      "type": "ivec2",
+      "offset": 0
+     },
+     {
+      "name": "uOffset",
+      "type": "ivec2",
+      "offset": 8
+     },
+     {
+      "name": "uShift",
+      "type": "ivec2",
+      "offset": 16
+     },
+     {
+      "name": "uCell",
+      "type": "float",
+      "offset": 24
+     },
+     {
+      "name": "uP",
+      "type": "float",
+      "offset": 28
+     },
+     {
+      "name": "uK",
+      "type": "float",
+      "offset": 32
+     },
+     {
+      "name": "uMexp",
+      "type": "float",
+      "offset": 36
+     },
+     {
+      "name": "uNexp",
+      "type": "float",
+      "offset": 40
+     },
+     {
+      "name": "uG",
+      "type": "float",
+      "offset": 44
+     },
+     {
+      "name": "uKloose",
+      "type": "float",
+      "offset": 48
+     },
+     {
+      "name": "uMaxDep",
+      "type": "float",
+      "offset": 52
+     },
+     {
+      "name": "uMaxEro",
+      "type": "float",
+      "offset": 56
+     },
+     {
+      "name": "uHardK",
+      "type": "float",
+      "offset": 60
+     },
+     {
+      "name": "uInner",
+      "type": "int",
+      "offset": 64
+     },
+     {
+      "name": "uLakeTrap",
+      "type": "float",
+      "offset": 68
+     },
+     {
+      "name": "uPitTrap",
+      "type": "float",
+      "offset": 72
+     }
+    ]
+   },
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "erosion_accum_flow_only",
+   "source": "engine_vr/shaders_gen/erosion_accum_flow_only.comp",
+   "stage": "comp",
+   "defines": {
+    "FLOW_ONLY": ""
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "texH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texW",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texM",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "imgAcc",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 0,
+     "glsl_type": "image2D",
+     "explicit_binding": true
+    }
+   ],
+   "engine_source": "engine/shaders/erosion_accum.comp",
+   "call_site": "engine/erosion.py:170",
+   "note": "erosion.py compiles this source twice; the second variant defines FLOW_ONLY (valueless #define)",
+   "mode": "resolved",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 16,
+    "locations_injected": 0,
+    "explicit_bindings": 4,
+    "split_declarations": 0,
+    "samplers": 3,
+    "images": 1,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/erosion_accum_flow_only.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 76,
+    "members": [
+     {
+      "name": "uRes",
+      "type": "ivec2",
+      "offset": 0
+     },
+     {
+      "name": "uOffset",
+      "type": "ivec2",
+      "offset": 8
+     },
+     {
+      "name": "uShift",
+      "type": "ivec2",
+      "offset": 16
+     },
+     {
+      "name": "uCell",
+      "type": "float",
+      "offset": 24
+     },
+     {
+      "name": "uP",
+      "type": "float",
+      "offset": 28
+     },
+     {
+      "name": "uK",
+      "type": "float",
+      "offset": 32
+     },
+     {
+      "name": "uMexp",
+      "type": "float",
+      "offset": 36
+     },
+     {
+      "name": "uNexp",
+      "type": "float",
+      "offset": 40
+     },
+     {
+      "name": "uG",
+      "type": "float",
+      "offset": 44
+     },
+     {
+      "name": "uKloose",
+      "type": "float",
+      "offset": 48
+     },
+     {
+      "name": "uMaxDep",
+      "type": "float",
+      "offset": 52
+     },
+     {
+      "name": "uMaxEro",
+      "type": "float",
+      "offset": 56
+     },
+     {
+      "name": "uHardK",
+      "type": "float",
+      "offset": 60
+     },
+     {
+      "name": "uInner",
+      "type": "int",
+      "offset": 64
+     },
+     {
+      "name": "uLakeTrap",
+      "type": "float",
+      "offset": 68
+     },
+     {
+      "name": "uPitTrap",
+      "type": "float",
+      "offset": 72
+     }
+    ]
+   },
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "erosion_hill",
+   "source": "engine_vr/shaders_gen/erosion_hill.comp",
+   "stage": "comp",
+   "defines": {},
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "texH",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texM",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "texNet",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "imgH",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 0,
+     "glsl_type": "image2D",
+     "explicit_binding": true
+    },
+    {
+     "name": "imgTrack",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 1,
+     "glsl_type": "image2D",
+     "explicit_binding": true
+    }
+   ],
+   "engine_source": "engine/shaders/erosion_hill.comp",
+   "call_site": "engine/erosion.py:170",
+   "note": null,
+   "mode": "resolved",
+   "glslc_seconds": 0.05,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 27,
+    "locations_injected": 0,
+    "explicit_bindings": 5,
+    "split_declarations": 0,
+    "samplers": 3,
+    "images": 2,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/erosion_hill.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 120,
+    "members": [
+     {
+      "name": "uRes",
+      "type": "ivec2",
+      "offset": 0
+     },
+     {
+      "name": "uOffset",
+      "type": "ivec2",
+      "offset": 8
+     },
+     {
+      "name": "uShift",
+      "type": "ivec2",
+      "offset": 16
+     },
+     {
+      "name": "uCell",
+      "type": "float",
+      "offset": 24
+     },
+     {
+      "name": "uApply",
+      "type": "int",
+      "offset": 28
+     },
+     {
+      "name": "uTb",
+      "type": "float",
+      "offset": 32
+     },
+     {
+      "name": "uCb",
+      "type": "float",
+      "offset": 36
+     },
+     {
+      "name": "uTbLow",
+      "type": "float",
+      "offset": 40
+     },
+     {
+      "name": "uHardExpLow",
+      "type": "float",
+      "offset": 44
+     },
+     {
+      "name": "uTreeA",
+      "type": "float",
+      "offset": 48
+     },
+     {
+      "name": "uTreeB",
+      "type": "float",
+      "offset": 52
+     },
+     {
+      "name": "uRockA",
+      "type": "float",
+      "offset": 56
+     },
+     {
+      "name": "uRockB",
+      "type": "float",
+      "offset": 60
+     },
+     {
+      "name": "uTl",
+      "type": "float",
+      "offset": 64
+     },
+     {
+      "name": "uCl",
+      "type": "float",
+      "offset": 68
+     },
+     {
+      "name": "uT1",
+      "type": "float",
+      "offset": 72
+     },
+     {
+      "name": "uR1",
+      "type": "float",
+      "offset": 76
+     },
+     {
+      "name": "uCover",
+      "type": "float",
+      "offset": 80
+     },
+     {
+      "name": "uDebris",
+      "type": "float",
+      "offset": 84
+     },
+     {
+      "name": "uHardExp",
+      "type": "float",
+      "offset": 88
+     },
+     {
+      "name": "uJitter",
+      "type": "float",
+      "offset": 92
+     },
+     {
+      "name": "uSpikeK",
+      "type": "float",
+      "offset": 96
+     },
+     {
+      "name": "uWexp",
+      "type": "float",
+      "offset": 100
+     },
+     {
+      "name": "uLooseMax",
+      "type": "float",
+      "offset": 104
+     },
+     {
+      "name": "uCreep",
+      "type": "float",
+      "offset": 108
+     },
+     {
+      "name": "uCreepRock",
+      "type": "float",
+      "offset": 112
+     },
+     {
+      "name": "uSeed",
+      "type": "uint",
+      "offset": 116
+     }
+    ]
+   },
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  }
+ ],
+ "extra_variants_checked": [
+  {
+   "name": "scene_trace_q0",
+   "defines": {
+    "QUALITY": "0",
+    "SCENE_PASS": "99"
+   },
+   "compiled": true,
+   "validated": true,
+   "bindings": 16,
+   "error": null
+  },
+  {
+   "name": "scene_kind1_terrain_q0",
+   "defines": {
+    "QUALITY": "0",
+    "SCENE_PASS": "1"
+   },
+   "compiled": true,
+   "validated": true,
+   "bindings": 17,
+   "error": null
+  }
+ ]
+}

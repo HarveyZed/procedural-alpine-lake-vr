@@ -1,0 +1,3 @@
+engine_vr/shaders_gen/bake_relief.frag:64: error: 'binding' : sampler/texture/image requires layout(binding=X)
+engine_vr/shaders_gen/bake_relief.frag:434: error: 'location' : SPIR-V requires location for user input/output
+2 errors generated.

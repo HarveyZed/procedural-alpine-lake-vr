@@ -1,0 +1,2 @@
+engine_vr/shaders_gen/bake_forest.frag:62: error: 'binding' : sampler/texture/image requires layout(binding=X)
+1 error generated.

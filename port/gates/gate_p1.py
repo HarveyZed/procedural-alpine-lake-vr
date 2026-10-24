@@ -15,7 +15,7 @@ def check(name, ok, detail=""):
 
 def sh(args, timeout=300):
     p = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, timeout=timeout)
-    return p.returncode, (p.stdout + p.stderr)[:600]
+    return p.returncode, p.stdout + p.stderr
 
 mf = ROOT / "engine_vr/manifest.json"
 check("manifest.json exists", mf.exists())

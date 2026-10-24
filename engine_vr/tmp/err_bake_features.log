@@ -1,0 +1,3 @@
+engine_vr/shaders_gen/bake_features.frag:90: error: 'non-opaque uniforms outside a block' : not allowed when using GLSL for Vulkan
+engine_vr/shaders_gen/bake_features.frag:294: error: 'binding' : sampler/texture/image requires layout(binding=X)
+2 errors generated.

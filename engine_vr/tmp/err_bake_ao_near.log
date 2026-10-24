@@ -1,0 +1,2 @@
+engine_vr/shaders_gen/bake_ao_near.frag:30: error: 'binding' : sampler/texture/image requires layout(binding=X)
+1 error generated.
