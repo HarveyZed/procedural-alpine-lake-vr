@@ -46,9 +46,7 @@ if mf.exists():
         if rc != 0:
             check(f"spirv-val {name}", False, o.strip()[-300:]); out.unlink(missing_ok=True); continue
         rc, dis = sh([str(BIN / "spirv-dis"), str(out)])
-        pairs = {(int(s), int(b)) for s, b in re.findall(r"Decorate %\S+ DescriptorSet (\d+)\n.*?\n\s*Decorate %\S+ Binding (\d+)", dis)}
-        flat = re.findall(r"DescriptorSet (\d+)[^\n]*\n(?:[^\n]*\n)?\s*Decorate %\S+ Binding (\d+)", dis)
-        # simpler robust scan: pair per-resource by order of appearance
+        # robust scan: pair DescriptorSet/Binding decorations per resource
         sets = re.findall(r"Decorate %(\S+) DescriptorSet (\d+)", dis)
         binds = re.findall(r"Decorate %(\S+) Binding (\d+)", dis)
         by_res = {}
