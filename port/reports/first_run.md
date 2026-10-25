@@ -88,3 +88,17 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   runaway (or NaN-epsilon) in a crevice near lon +11.25/lat +28.1.
 - Coder dispatched per RUNBOOK (fix engine/shaders/, <=2min GPU cap, no
   visual-math retuning, glslc/spirv-val static gate gate_p6.py).
+
+### P6 FIXED (coder 10d6f925) - device loss closed; TWO NEW BUGS OPENED
+- Fix: VR_PANO-scoped robustness guards (scene.frag:57-71 footprint-gated
+  maxSteps=100 below 9.0e-4 rad footprint; :117-124,144-151 escapes;
+  ground.glsl DDA clamps + gcSafeT 1e12 guards). Gate P6 PASS; SPIR-V parity
+  38/38 (film byte-identical). Debug flag --debug-foot-res reproduces full-res
+  footprint at 640x320 (pass/fail signal: 640 t64 repro exit0 95s).
+- PROVES: G-buffer mis-wire => PROBES #7-#12 ABOVE ARE VOID AS VISUAL
+  EVIDENCE (kind readback vr.py:1047-1050 always {0} => only sky shaded;
+  row-mean/seam/parallax all sky-only metrics). Re-verify after P7.
+- P7 OPENED: (A) gbuf attachment mapping (images[0]=fragInfo, [1]=zeros,
+  kinds never fire); (B) run-to-run nondeterminism dRGB 1.63/255 on 34% px.
+- Also: legit rays need up to 267 steps at 8192 - cap 100 = truncation
+  banding accepted for now (dead-device alternative); revisit post-P7.

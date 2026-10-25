@@ -799,7 +799,7 @@ def _upload_noise3(host, pv, n3):
     return pv.Tex(img, "linear", "repeat")
 
 
-def upload_footstrip(pv, w, h):
+def upload_footstrip(pv, w, h, foot_src=None):
     """Per-row footprint strip (h, 1) -> R32_SFLOAT sampled Tex.
 
     review_p4.md C1: pano.texel_footprint() returns (h,) - the gate-checked
@@ -811,9 +811,19 @@ def upload_footstrip(pv, w, h):
     texelFetch(panoFoot, ivec2(0, row), 0), which is exactly this layout.
     Kept as a named helper so engine_vr/tmp/test_p4_fixes.py can exercise
     the real upload path on CPU (fake host, no GPU).
+
+    foot_src=(W,H) - PHASE_6 debug hook (--debug-foot-res): take the footprint
+    VALUES of a WxH render while actually rendering wxh, i.e. decouple the
+    per-texel epsilon (gPixAng) from the image size. At 2:1 the strip is
+    constant pi/H, so this is exactly "march as if the image were H rows
+    tall". Debug-only: default None keeps the production behaviour byte-exact.
     """
-    return pv.upload(pano.texel_footprint(w, h).reshape(-1, 1),
-                     filt="nearest")
+    sw, sh = foot_src if foot_src else (w, h)
+    strip = pano.texel_footprint(sw, sh)
+    if strip.shape[0] != h:          # synthetic fine strip: replicate to h rows
+        strip = np.repeat(strip[:1], h) if strip.shape[0] > h \
+            else np.resize(strip, h)
+    return pv.upload(strip.reshape(-1, 1), filt="nearest")
 
 
 def _clear_images(host, imgs):
@@ -920,7 +930,9 @@ def _render(args, w, h, eye_tags):
         names = pano_program_names()
         built = {n: host.build(n) for n in names}
         built["probe"] = host.build("probe")
-        fp_tex = upload_footstrip(pv, w, h)   # (h, 1) R32_SFLOAT strip
+        # --debug-foot-res (PHASE_6): march with another res's epsilon
+        fp_tex = upload_footstrip(pv, w, h,
+                                  getattr(args, "debug_foot_src", None))
         tex["panoFoot"] = fp_tex
 
         # ---- targets ----
@@ -1096,6 +1108,14 @@ def main(argv=None):
     ap.add_argument("--cache", default=None,
                     help="cache directory (sets ALPINE_CACHE for the "
                          "whole process)")
+    ap.add_argument("--debug-foot-res", default=None, metavar="WxH",
+                    help="PHASE_6 debug only: sample the panoFoot footprint "
+                         "strip of a WxH render while rendering --res, i.e. "
+                         "march with another resolution's per-texel epsilon "
+                         "(gPixAng). Lets a small render reproduce / prove a "
+                         "step-budget (runaway-march) failure of a large one "
+                         "inside the GPU time budget. Default: off "
+                         "(production behaviour unchanged).")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the render plan as JSON and exit "
                          "(never opens the GPU)")
@@ -1122,6 +1142,13 @@ def main(argv=None):
         w, h = 8192, 2048
     else:
         w, h = 8192, 4096
+    foot_src = None
+    if getattr(args, "debug_foot_res", None):
+        fw, fh = (int(v) for v in args.debug_foot_res.lower().split("x"))
+        if fw < 2 * fh:
+            ap.error("--debug-foot-res WxH needs W >= 2H (same rule as --res)")
+        foot_src = (fw, fh)
+        args.debug_foot_src = foot_src
     vp = VIEWPOINTS[args.viewpoint]
     if args.dry_run:
         summary, detail = _plan(args, w, h)

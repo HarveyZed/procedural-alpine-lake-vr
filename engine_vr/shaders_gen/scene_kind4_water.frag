@@ -10969,7 +10969,8 @@ Hit trace(vec3 ro, vec3 rd, float tmin, float tmax, bool withWater, bool withTre
     Hit h; h.t = tmax; h.kind = K_SKY; h.cell = ivec2(0); h.info = vec4(0.0);
     float t = tmin, tPrev = tmin;
     bool escaped = false;
-    for (int i = 0; i < maxSteps; i++) {
+
+for (int i = 0; i < maxSteps; i++) {
         vec3 p = ro + rd * t;
         if (p.y > MAX_TERRAIN_H && rd.y >= 0.0) { escaped = true; break; }
         float det = detailWeight(t);

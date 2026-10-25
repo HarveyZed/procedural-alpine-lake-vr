@@ -4059,6 +4059,16 @@ void gcSegment(vec3 o, float t0, vec3 d) {
     float sEnd = gcSegLen;
     gcDl = length(d.xz);
     gcDn = d.xz / max(gcDl, 1e-6);
+    // FIXME(p6): degenerate-sample escape for the whole DDA below. With a non-finite origin or
+    // segment direction the cell bounds (ca/cb, ta/tb) become ivec2(floor(NaN)) = INT_MIN-class
+    // garbage and the two cell walks run ~2^31 times -> AGX force-kill = VkErrorDeviceLost
+    // (deterministic at 8192x4096, tile (4352,1408,64,64); reproducible at 640x320 with a
+    // 8192x4096 texel-footprint strip). This is the same "nothing here, advance sEnd" early-out the
+    // bare-segment test uses a few lines below, so the march simply steps on.
+    if (!(abs(o.x) < 1.0e8 && abs(o.y) < 1.0e8 && abs(o.z) < 1.0e8
+          && abs(d.x) < 1.0e6 && abs(d.y) < 1.0e6 && abs(d.z) < 1.0e6)) {
+        gcSegHit = false; gcSafeT = t0 + sEnd; return;
+    }
     float sBest = 1e9;
     vec2 midP = o.xz + d.xz * (0.5 * sEnd);
     // bare segment (rock, scree, cobble beach, water): nothing can grow along it -> skip the gathers
@@ -4081,6 +4091,11 @@ void gcSegment(vec3 o, float t0, vec3 d) {
     vec2 e = o.xz + d.xz * sEnd;
     vec2 ivS = 1.0 / max(abs(d.xz), vec2(1e-7)) * vec2(d.x >= 0.0 ? 1.0 : -1.0, d.z >= 0.0 ? 1.0 : -1.0);
     ivec2 ca = ivec2(floor((min(o.xz, e) - GC_CO) / GC_C2)), cb = ivec2(floor((max(o.xz, e) + GC_CO) / GC_C2));
+    // FIXME(p6): iteration cap. A segment of gcSegLen (<= GC_SEG = 2.4 m) grown by GC_CO (0.6 m)
+    // spans at most ceil((2.4 + 2 * 0.6) / GC_C2 = 1.76) + 1 = 4 cells per axis = 16 visits
+    // (measured p99 = 16, max = 16 on healthy pixels), so 8 per axis is 2x headroom: it cannot bind
+    // on legit geometry but bounds the walk if a corrupted bound ever reaches it.
+    cb = min(cb, ca + 8);
     for (int j = ca.y; j <= cb.y; j++)
     for (int i = ca.x; i <= cb.x; i++) {
         vec2 bmin = vec2(i, j) * GC_C2 - GC_CO, bmax = bmin + GC_C2 + 2.0 * GC_CO;
@@ -4121,6 +4136,9 @@ void gcSegment(vec3 o, float t0, vec3 d) {
     {
         vec2 lo = min(o.xz, e) - GC_TR, hi = max(o.xz, e) + GC_TR;
         ivec2 ta = ivec2(floor(lo / GC_C3)), tb = ivec2(floor(hi / GC_C3));
+        // FIXME(p6): same cap for the tussock walk: (GC_SEG 2.4 + 2 * GC_TR 0.6) / GC_C3 1.2
+        // -> <= 4 cells per axis on a healthy segment.
+        tb = min(tb, ta + 8);
         vec2 iv = ivS;
         for (int j = ta.y; j <= tb.y; j++)
         for (int i = ta.x; i <= tb.x; i++) {
@@ -4181,6 +4199,12 @@ void gcSegment(vec3 o, float t0, vec3 d) {
     sDone = min(sDone, sDoneM);
     gcSegHit = sBest <= sDone;
     gcSafeT = t0 + (gcSegHit ? sBest : max(sDone, 0.0));
+    // FIXME(p6): a generator that hands back a non-finite hit distance poisons the cached safe
+    // advance, and coverSDF then feeds NaN to the march (see scene.frag). Drop the segment result
+    // and fall back to the per-step epsilon (coverSDF's own epsC) so the cache re-anchors next call.
+    if (!(abs(gcSafeT) < 1.0e12)) {
+        gcSegHit = false; gcRayOk = false; gcSafeT = t0 + max(0.002, t0 * gPixAng * 3.0);
+    }
 }
 
 // ---- shading ---------------------------------------------------------------------------------

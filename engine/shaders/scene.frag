@@ -52,6 +52,27 @@ Hit trace(vec3 ro, vec3 rd, float tmin, float tmax, bool withWater, bool withTre
     Hit h; h.t = tmax; h.kind = K_SKY; h.cell = ivec2(0); h.info = vec4(0.0);
     float t = tmin, tPrev = tmin;
     bool escaped = false;
+
+#ifdef VR_PANO
+    // FIXME(p6): iteration cap for the panorama march. The march's step floor is
+    //   eps = max(0.002, (t + gTraceT0) * gPixAng * pixScale),
+    // i.e. proportional to the pixel footprint: 9.8e-3 rad at 640x320, 7.7e-4 rad at 8192x4096. A ray
+    // therefore needs ~13x more steps to cross the same scene at 8192x4096 while the tile (64x64 px)
+    // and the work one command buffer may run stay fixed, and rays that do not converge already leave
+    // through the out-of-steps path below (unresolved K_TERRAIN within 60 m of the ground, else K_SKY)
+    // - so bounding the loop reuses the engine's existing truncation instead of adding a new one.
+    // Measured legit worst case at 640x320 coarse epsilon: 117 steps/ray total, 42 max with cover off
+    // (probes engine_vr/tmp/p6vals.py, engine_vr/tmp/p6dbg2.py). Ladder: port/reports/phase6.md.
+    // FIXME(p6): scope the cap to the regime that fails instead of the whole panorama path. Measured
+    // footprints: 9.82e-3 rad at 640x320 (works), 3.07e-3 at 2048x1024 (works), 1.02e-3 at 6144x3072
+    // (works), 7.67e-4 at 8192x4096 (device-lost) - and the same 8192 footprint at 640x320 reproduces
+    // the loss. The bound below sits in the measured gap, so the cap cannot bind on a render that
+    // already completes; it only bounds marches that today end in a force-killed device.
+    if (gPixAng < 9.0e-4) maxSteps = min(maxSteps, 100);
+#endif
+
+
+
     for (int i = 0; i < maxSteps; i++) {
         vec3 p = ro + rd * t;
         if (p.y > MAX_TERRAIN_H && rd.y >= 0.0) { escaped = true; break; }
@@ -92,6 +113,16 @@ Hit trace(vec3 ro, vec3 rd, float tmin, float tmax, bool withWater, bool withTre
         if (withRocks && gPrimary && dyT < COVER_MAX_H && t < COVER_MAX_DIST) {
             vec4 ci;
             float dc = coverSDF(p, t, ci);
+#ifdef VR_PANO
+            // FIXME(p6): degenerate-sample escape. At pano epsilon (gPixAng 7.7e-4 at 8192x4096) the
+            // per-pixel cover cache (gcRd / gcAP / gcSafeT, ground.glsl) can be re-anchored off a
+            // near-zero delta and hand back a non-finite distance. That value used to reach "d", then
+            // "t += max(d, ...)", so p became NaN and gcSegment's ivec2 DDA bounds became
+            // ivec2(floor(NaN)) = INT_MIN-class garbage: the cell walks then ran ~2^31 times and the
+            // GPU force-killed the device. Treat it as "no cover found at this step" - the same
+            // distance coverSDF returns when it has to defer (max(epsC, 0.02), ground.glsl:1726).
+            if (!(dc == dc)) dc = eps;
+#endif
             if (dc < eps) { h.t = t; h.kind = K_COVER; h.info = ci; return h; }
             d = min(d, dc);
         }
@@ -109,6 +140,16 @@ Hit trace(vec3 ro, vec3 rd, float tmin, float tmax, bool withWater, bool withTre
         }
         tPrev = t;
         t += max(d, eps * 0.8);
+#ifdef VR_PANO
+        // FIXME(p6): iteration-cap companion: a march distance that went non-finite (or negative)
+        // leaves through the engine's EXISTING out-of-steps path below (near the ground -> unresolved
+        // K_TERRAIN, otherwise K_SKY) instead of marching on at a NaN position. t starts at
+        // tmin >= 0.05 and only ever advances by max(d, eps * 0.8) with eps >= 0.002, so this only
+        // fires on a degenerate step: NaN, a negative t, or a t that left the world's sane range
+        // (the SDFs hand back 1e9 / inf "nothing here" sentinels; t + inf made p NaN, which is how
+        // NaN reached the cover cache and then the DDA cell bounds in the first place).
+        if (!(t > 0.0 && t < 1.0e7)) break;
+#endif
         if (t > tmax) { escaped = true; break; }
     }
     // out of steps while still close to the ground: treat as an (unresolved) terrain hit, not sky
@@ -211,6 +252,7 @@ void main() {
     fragColor = vec4(coneTrace(uCamPos, rd, 3.0 * gPixAng), 0.0, 0.0, 1.0);
 }
 
+
 #elif SCENE_PASS == 99
 layout(location = 1) out vec4 fragInfo;
 uniform sampler2D uCone;      // (perf4) cone pre-pass: the block's primary rays start there
@@ -229,6 +271,7 @@ void main() {
         t0 = k == 5 ? 0.05 : max(t0 * 0.75, 0.05);
     }
     Hit h = trace(ro, rd, t0, 60000.0, true, true, true, QUALITY == 1 ? 700 : 380, 0.8);
+
     // falls flora hook (falls.glsl): 3D shrubs / ferns on the waterfall's rock step and banks, marched
     // by ffTrace up to the primary hit (primary rays only), shaded by shadeFlora (SCENE_PASS K_FALLSV)
     vec4 ffI;

@@ -1,0 +1,118 @@
+[gl_vr] device: Apple M5 Ultra type=1 api=0x402165
+[gl_vr] recommendedMaxMemorySize=0.0 GiB -> watchdog cap 64.0 GiB
+[gl_vr] heap 0: budget=222.7 GiB usage=0.0 GiB
+[gl_vr] pipeline cache: loaded 44509 B
+baking analytic far heights ...
+  bake_height 8192^2 in 1.2s
+eroding ...
+erosion: building lake/tarn protection ...
+  lake: 60/60 wet axis samples inside the flood-filled lake
+  lake: area 274.6 ha, spill 24.41 m (freeboard 24.4 m) at x=-82 z=-1586, breach path 74 cells
+  tarn: area 17.2 ha, spill 541.54 m (freeboard 21.5 m) at x=-1218 z=-386, breach path 55 cells
+  waterfall site: x=515 z=-550 (protected r=150..250 m)
+  rock hardness field (noise + joint sets) ...
+  stream corridor: north tip z=1590, 1567 m, pre-cut 15 m / 150 m
+  protection 3.6s
+  level 512^2 (64 m): upload 0.2s
+    hillslope pre/post-pass 100+0 steps 0.1s
+    breach: 148 depressions >0.1 km2 (max depth 526 m); filled 3920 cells (max 177 m), carved 11687 cells (max 513 m)  1.1s
+    fill init 65 passes (0 undrained) 0.1s
+    step 100/700  0.4s
+    step 200/700  0.6s
+    step 300/700  0.7s
+    step 400/700  0.9s
+    step 500/700  1.1s
+    step 600/700  1.2s
+    step 700/700  1.4s
+    cleanup: 44 depressions >0.1 km2 (max depth 124 m); filled 4657 cells (max 65 m), carved 2441 (max 60 m)  1.0s
+    depressions >0.1 km2 after this level: {'n_big': 0, 'max_depth': 0.0, 'area_frac': 0.0}
+  level 512^2 done in 4.3s  (loose max 40.0 m, change -361..488 m)
+  level 1024^2 (32 m): upload 0.3s
+    hillslope pre/post-pass 80+0 steps 0.0s
+    fill init 65 passes (0 undrained) 0.0s
+    step 100/600  0.4s
+    step 200/600  0.6s
+    step 300/600  0.9s
+    step 400/600  1.2s
+    step 500/600  1.4s
+    step 600/600  1.6s
+    pit fill: 1760 pits filled (max 19.7 m), 112 deeper left
+    cleanup: 45 depressions >0.1 km2 (max depth 84 m); filled 4107 cells (max 35 m), carved 2138 (max 50 m)  1.1s
+  level 1024^2 done in 3.4s  (loose max 40.0 m, change -360..518 m)
+  level 2048^2 (16 m): upload 0.7s
+    hillslope pre/post-pass 30+0 steps 0.0s
+    fill init 65 passes (0 undrained) 0.1s
+    step 100/800  0.8s
+    step 200/800  1.2s
+    step 300/800  1.7s
+    step 400/800  2.3s
+    step 500/800  2.7s
+    step 600/800  3.2s
+    step 700/800  3.6s
+    step 800/800  4.1s
+    pit fill: 2346 pits filled (max 19.3 m), 60 deeper left
+    cleanup: 46 depressions >0.1 km2 (max depth 100 m); filled 5144 cells (max 52 m), carved 2077 (max 50 m)  1.0s
+  level 2048^2 done in 6.7s  (loose max 40.0 m, change -367..532 m)
+  level 4096^2 (8 m): upload 1.5s
+    hillslope pre/post-pass 30+0 steps 0.1s
+    fill init 129 passes (0 undrained) 0.3s
+    step 100/400  2.2s
+    step 200/400  3.4s
+    step 300/400  4.9s
+    step 400/400  6.2s
+    pit fill: 7938 pits filled (max 19.9 m), 81 deeper left
+    cleanup: 26 depressions >0.1 km2 (max depth 40 m); filled 1906 cells (max 1 m), carved 1995 (max 41 m)  1.1s
+  level 4096^2 done in 11.0s  (loose max 40.0 m, change -355..540 m)
+  level 8192^2 (4 m, window 3072^2): upload 1.0s
+    hillslope pre/post-pass 20+30 steps 0.1s
+    flow map 1.4s
+  level 8192^2 done in 2.8s  (loose max 40.0 m, change -325..539 m)
+  final cleanup 1: 6 depressions >0.1 km2 (max depth 48 m); filled 3595 cells (max 8 m), carved 278 (max 40 m)  1.2s
+  final cleanup 2: 0 depressions >0.1 km2 (max depth 0 m); filled 0 cells (max 0 m), carved 0 (max 0 m)  2.3s
+erosion total 35.8s; clamp {'lake': {'water_cells_clamped': 14423, 'rim_cells_raised': 0, 'max_rim_raise': 0.0}, 'tarn': {'water_cells_clamped': 2024, 'rim_cells_raised': 0, 'max_rim_raise': 0.0}}; freeboard {'lake': {'spill_level': 31.2, 'freeboard_m': 31.2, 'spill_xz': [-78, -1594], 'input_spill_level': 24.41}, 'tarn': {'spill_level': 548.09, 'freeboard_m': 28.09, 'spill_xz': [-1194, -394], 'input_spill_level': 541.54}}
+  shore bathymetry: deepened 15550 cells (max 6.2 m), bank cells raised 19 (0.2s)
+  beaches: 27 % of the shore cells, max lowering 8.6 m (0.2s)
+  macro blurs in 0.5s
+  bake_macro 8192^2 in 0.3s
+  bake_relief 8192^2 in 0.5s
+  de-fin: |dh| mean 3.20 m on 7327674 cells; de-spike: 120140 cells > 1 m, 26699 > 10 m (max 111 m) (14.7s)
+  crest spikes: 219933 cells lowered > 1 m, 47554 > 10 m (max 167 m) in 5.0s
+  talus cones: 901 in 3.9s
+  river: 821 rows, floodplain -108 .. -421 m (0.1s)
+  bake_near 4096^2 in 0.1s
+  shore (near): 8667 cells changed (1.2s)
+  near map: cliff slope limit 5.0 m/texel moved 879 texels
+  near map check OK (max texel above all neighbours 0.45 m)
+  fall 0: lip 26.3 m, base u 2.2, impacts [0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.0, 0.0, 1.0]
+  fall 1: lip 16.8 m, base u 2.5, impacts [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+  stream corridor map 307x543 (1265 wet texels)
+baking analytic far heights ...
+  bake_height 8192^2 in 0.8s
+  shore bathymetry: deepened 10445 cells (max 6.2 m), bank cells raised 758 (0.2s)
+  beaches: 27 % of the shore cells, max lowering 5.8 m (0.2s)
+  macro blurs in 0.5s
+  bake_macro 8192^2 in 0.1s
+  bake_relief 8192^2 in 0.2s
+  de-fin: |dh| mean 2.90 m on 6049200 cells; de-spike: 70705 cells > 1 m, 13859 > 10 m (max 94 m) (14.8s)
+  crest spikes: 173240 cells lowered > 1 m, 33644 > 10 m (max 109 m) in 4.9s
+  talus cones: 901 in 3.9s
+  river: 1792 rows, floodplain -121 .. -787 m (0.1s)
+  bake_near 4096^2 in 0.0s
+  shore (near): 25846 cells changed (1.3s)
+  near map: cliff slope limit 5.0 m/texel moved 937 texels
+  near map check OK (max texel above all neighbours 0.58 m)
+  fall 0: lip 26.2 m, base u 2.2, impacts [0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.0, 0.0, 1.0]
+  fall 1: lip 15.8 m, base u 2.4, impacts [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.9, 0.75, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+  stream corridor map 182x538 (1206 wet texels)
+baking AO ...
+  bake_ao_far 4096^2 in 0.4s
+  bake_ao_near 4096^2 in 0.2s
+baking water + forest maps ...
+  lake area 2.75 km2, tarn area 17.2 ha
+  river water cells: 7924
+  bake_forest 8192^2 in 0.5s
+  maps in 1.7s
+baking 3D noise ...
+B1 DONE
+[gl_vr] pipeline cache: saved 246066 B
+[gl_vr] pipeline cache: saved 246066 B

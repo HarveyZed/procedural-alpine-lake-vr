@@ -6235,7 +6235,8 @@ Hit trace(vec3 ro, vec3 rd, float tmin, float tmax, bool withWater, bool withTre
     Hit h; h.t = tmax; h.kind = K_SKY; h.cell = ivec2(0); h.info = vec4(0.0);
     float t = tmin, tPrev = tmin;
     bool escaped = false;
-    for (int i = 0; i < maxSteps; i++) {
+
+for (int i = 0; i < maxSteps; i++) {
         vec3 p = ro + rd * t;
         if (p.y > MAX_TERRAIN_H && rd.y >= 0.0) { escaped = true; break; }
         float det = detailWeight(t);
@@ -6355,6 +6356,7 @@ void main() {
         t0 = k == 5 ? 0.05 : max(t0 * 0.75, 0.05);
     }
     Hit h = trace(ro, rd, t0, 60000.0, true, true, true, QUALITY == 1 ? 700 : 380, 0.8);
+
     // falls flora hook (falls.glsl): 3D shrubs / ferns on the waterfall's rock step and banks, marched
     // by ffTrace up to the primary hit (primary rays only), shaded by shadeFlora (SCENE_PASS K_FALLSV)
     vec4 ffI;
