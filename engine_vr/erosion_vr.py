@@ -27,6 +27,7 @@ Import-safe: no device, no vulkan call at import; erode() needs a Host
 installed by passes_vr.open_host() (or the run_erosion helper below).
 """
 
+import heapq
 import math  # noqa: F401  (used by the copied axis_x)
 import os  # noqa: F401  (used by the copied stages)
 import time
