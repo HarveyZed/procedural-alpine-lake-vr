@@ -51,6 +51,9 @@ document why a residual exists).
 - gate: .venv/bin/python port/gates/gate_p7.py (static: FIXME(p7) markers
   on modified files, SPIR-V parity report present w/ 28 film programs
   byte-identical, report sections, py_compile vr.py).
+  Machine-readable evidence the gate reads (write these two):
+  engine_vr/tmp/p7_parity.json  {"film_identical": true, "film_programs": N, ...}
+  engine_vr/tmp/p7_determinism.json {"max_drgb": 0} or {"max_drgb": x, "residual_reason": "..."}
 - ruff + py_compile on touched .py. NO git. NO 8192x4096.
 
 ## GPU RUN CAPS (same as P6)
