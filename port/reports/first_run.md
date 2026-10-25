@@ -102,3 +102,12 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   kinds never fire); (B) run-to-run nondeterminism dRGB 1.63/255 on 34% px.
 - Also: legit rays need up to 267 steps at 8192 - cap 100 = truncation
   banding accepted for now (dead-device alternative); revisit post-P7.
+
+### GC review of P6 (commit 5ff9410): ACCEPT
+- 7 guards all inside #ifdef VR_PANO, each with math justification (8-cell DDA
+  clamp vs measured legit max 4/axis; 1e12 vs in-file 1e9 sentinel; escapes
+  route into EXISTING out-of-steps truncation). No visual-math retuning.
+- Nit (accepted, not worth a rebuild): two stray blank lines in scene.frag.
+- Housekeeping: vr.py carries 10 pre-existing ruff errors since P4 (incl.
+  EXE001 shebang); not P6-introduced; gates never ruffed vr.py. Note for
+  final sweep.
