@@ -175,7 +175,8 @@ def upload(arr, filt="linear", repeat=False, dtype=None, extra_usage=0):
     else:
         a = np.ascontiguousarray(a, np.float32)
     try:
-        fmt_name = gl_vr.FMT_BY_COMPS_DTYPE[(comps, key)][0]  # table -> (name, np dtype); FIXME(first-run) P3 used it as bare name
+        # table -> (name, np dtype); FIXME(first-run) P3 used it as bare name
+        fmt_name = gl_vr.FMT_BY_COMPS_DTYPE[(comps, key)][0]
     except KeyError:
         raise GlvrError(
             f"no VK format for {comps} component(s) of {letter!r}") from None
@@ -200,7 +201,8 @@ def storage_image(res, comps=1, dtype="f4", data=None, depth=1, dims=2,
     vkv = gl_vr.vk()
     key = _DTYPE_BY_LETTER[dtype]
     try:
-        fmt_name = gl_vr.FMT_BY_COMPS_DTYPE[(comps, key)][0]  # table -> (name, np dtype); FIXME(first-run) P3 used it as bare name
+        # table -> (name, np dtype); FIXME(first-run) P3 used it as bare name
+        fmt_name = gl_vr.FMT_BY_COMPS_DTYPE[(comps, key)][0]
     except KeyError:
         raise GlvrError(
             f"no VK format for {comps} component(s) of {dtype!r}") from None

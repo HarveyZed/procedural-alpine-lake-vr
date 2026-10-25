@@ -938,7 +938,25 @@ def _render(args, w, h, eye_tags):
         # ---- targets ----
         # gbuf finalLayout TRANSFER_SRC (phase2.md risk note: fallback is
         # COLOR_ATTACHMENT + an explicit barrier before readback)
-        gbuf = pv.make_target(None, n_attachments=2, width=w, height=h)
+        # FIXME(p7): BUG A fix - the GL-era 2-attachment G-buffer is
+        # unrepresentable on MoltenVK 1.4.2 (only the highest-location written
+        # fragment output lands, in framebuffer slot 0; lower locations are
+        # discarded - probes engine_vr/tmp/p7probe2/3/5/7.py; GL-era truth:
+        # engine/shaders/scene.frag:280-281 + engine/render.py:484 reading
+        # attachment 0 channel 1 for the kind). gt0 = kind payload (the trace
+        # program's single fragColor output), gt1 = h.info written by the
+        # trace's uGInfo image store (engine_vr/shaders/scene.frag VR_PANO
+        # block). gt1 rests in GENERAL for the whole frame - a valid
+        # imageLayout for both the store and the later uGBuf1 sampler
+        # (write_descriptors keeps GENERAL, gl_vr.py:1199-1214) - and is
+        # never a color attachment, never read back, never transitioned.
+        gt0 = pv.make_target(None, width=w, height=h)
+        from engine_vr import gl_vr as _gl_vr   # FIXME(p7)
+        vku = _gl_vr.vk()   # FIXME(p7)
+        gt1 = host.make_image(w, h, pv.TARGET_FORMAT,   # FIXME(p7)
+                              vku.VK_IMAGE_USAGE_SAMPLED_BIT
+                              | vku.VK_IMAGE_USAGE_STORAGE_BIT,
+                              vku.VK_IMAGE_LAYOUT_GENERAL)
         acc = pv.make_target(None, width=w, height=h)
         _clear_images(host, [acc.images[0]])
         ct = pv.make_target(None, fmt_name="VK_FORMAT_R32_SFLOAT",
@@ -947,7 +965,7 @@ def _render(args, w, h, eye_tags):
                             width=(w + 3) // 4, height=(h + 3) // 4)
         _clear_images(host, [ct.images[0]])
         pv.to_sampler_layout([ct.images[0]])
-        pv.to_sampler_layout([gbuf.images[0], gbuf.images[1]])
+        pv.to_sampler_layout([gt0.images[0]])   # FIXME(p7): gt1 stays GENERAL
 
         # ---- descriptors (freeze layouts now; write_descriptors freezes
         # the CURRENT layout of every bound image - phase-2 contract) ----
@@ -962,13 +980,21 @@ def _render(args, w, h, eye_tags):
             return d
 
         host.write_descriptors(built[PANO_CONE], samplers=bind(PANO_CONE))
+        # FIXME(p7): the trace program writes h.info to gt1 via uGInfo
         host.write_descriptors(built[PANO_TRACE], samplers=bind(
-            PANO_TRACE, {"uCone": (ct.images[0], "nearest", "clamp")}))
+            PANO_TRACE, {"uCone": (ct.images[0], "nearest", "clamp")}),
+            storage_images={"uGInfo": gt1})
         for k in range(8):
             host.write_descriptors(built[names[2 + k]], samplers=bind(
                 names[2 + k],
-                {"uGBuf0": (gbuf.images[0], "nearest", "clamp"),
-                 "uGBuf1": (gbuf.images[1], "nearest", "clamp")}))
+                # FIXME(p7): all 8 kind programs read the kind payload from
+                # gt0 and the info payload from gt1 (writer/reader table in
+                # port/reports/phase7.md); uGBuf1 keeps imageLayout GENERAL -
+                # gt1 is never transitioned, and the queue-FIFO order
+                # trace-write submission -> kind-read submission is the
+                # execution order (vr.py tile loop, gl_vr.draw submits).
+                {"uGBuf0": (gt0.images[0], "nearest", "clamp"),
+                 "uGBuf1": (gt1, "nearest", "clamp")}))
         host.write_descriptors(built["probe"], samplers=bind("probe"))
 
         # ---- light probe ONCE (copied from engine/render.py:420-427;
@@ -1037,20 +1063,24 @@ def _render(args, w, h, eye_tags):
                         host.draw(built[PANO_CONE], ct,
                                   rect=(x // 4, y // 4, (tw + 3) // 4,
                                         (th + 3) // 4), cmd=cmd)
-                        host.draw(built[PANO_TRACE], gbuf, rect=(x, y, tw,
-                                                                 th),
+                        # FIXME(p7): the trace's single fragColor output
+                        # (kind payload) goes to gt0 slot 0; uGInfo stores
+                        # h.info into gt1 inside the same draw.
+                        host.draw(built[PANO_TRACE], gt0, rect=(x, y, tw,
+                                                                th),
                                   cmd=cmd)
                         host.end()
                         # kind bits: gbuf attachment 0 component 1
                         # (engine/render.py:484 reads components=2 then
                         # takes [1::2])
-                        kb = pv.read_image(gbuf.images[0],
+                        # FIXME(p7): kind bits from gt0 (was gbuf.images[0])
+                        kb = pv.read_image(gt0.images[0],
                                            rect=(x, y, tw, th))
                         kb = kb[..., 1]
                         hit = np.unique(np.clip(kb.astype(np.int32), 0, 7))
                         if hit.size:
-                            pv.to_sampler_layout([gbuf.images[0],
-                                                  gbuf.images[1]])
+                            # FIXME(p7): only gt0 transitions; gt1 GENERAL
+                            pv.to_sampler_layout([gt0.images[0]])
                             cmd = host.begin()
                             for k in hit:
                                 # blend ONE,ONE accumulate, copied from
@@ -1059,7 +1089,7 @@ def _render(args, w, h, eye_tags):
                                           rect=(x, y, tw, th), blend=True,
                                           cmd=cmd)
                             host.end()
-                pv.to_sampler_layout([gbuf.images[0], gbuf.images[1]])
+                pv.to_sampler_layout([gt0.images[0]])   # FIXME(p7)
             a = pv.read_image(acc_img)[..., :3] / float(n)
             # display flip, copied from engine/render.py:505 ([::-1]):
             # GL row 0 (lat +90 readback bottom) -> image row 0 (top)

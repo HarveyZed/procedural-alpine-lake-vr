@@ -6157,7 +6157,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect cone pre-pass: block-centre lon/lat ray, per-texel footprint strip for the cone half-angle",
    "mode": "reduced",
-   "glslc_seconds": 0.15,
+   "glslc_seconds": 0.19,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -6553,6 +6553,13 @@
      "glsl_type": "sampler2D"
     },
     {
+     "name": "uGInfo",
+     "kind": "storage_image",
+     "set": 3,
+     "binding": 0,
+     "glsl_type": "image2D"
+    },
+    {
      "name": "uCone",
      "kind": "combined_sampler",
      "set": 0,
@@ -6564,7 +6571,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect primary raygen: texel-centre lon/lat ray (RUNBOOK \u00a76), gPixAng = per-texel footprint, no DOF",
    "mode": "reduced",
-   "glslc_seconds": 0.23,
+   "glslc_seconds": 0.29,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -6573,7 +6580,7 @@
     "explicit_bindings": 0,
     "split_declarations": 0,
     "samplers": 16,
-    "images": 0,
+    "images": 1,
     "uniform_blocks": 1,
     "storage_blocks": 0
    },
@@ -6827,11 +6834,6 @@
      "name": "fragColor",
      "location": 0,
      "type": "vec4"
-    },
-    {
-     "name": "fragInfo",
-     "location": 1,
-     "type": "vec4"
     }
    ],
    "reflect_counts": {
@@ -6983,7 +6985,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 0 (sky); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.1,
+   "glslc_seconds": 0.13,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -7397,7 +7399,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 1 (terrain); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.28,
+   "glslc_seconds": 0.35,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -7811,7 +7813,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 2 (tree); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.15,
+   "glslc_seconds": 0.19,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -8225,7 +8227,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 3 (rock); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.19,
+   "glslc_seconds": 0.24,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -8639,7 +8641,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 4 (water); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.6,
+   "glslc_seconds": 0.73,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -9053,7 +9055,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 5 (cover); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.23,
+   "glslc_seconds": 0.29,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -9467,7 +9469,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 6 (hero); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.14,
+   "glslc_seconds": 0.17,
    "compiled": true,
    "validated": true,
    "port_stats": {
@@ -9881,7 +9883,7 @@
    "call_site": "vr.py (Phase-4 pano renderer, T3)",
    "note": "equirect kind-pass 7 (flora); directions identical to scene_pano_trace",
    "mode": "reduced",
-   "glslc_seconds": 0.13,
+   "glslc_seconds": 0.17,
    "compiled": true,
    "validated": true,
    "port_stats": {

@@ -289,7 +289,24 @@ void main() {
 
 
 #elif SCENE_PASS == 99
+#ifdef VR_PANO
+// FIXME(p7): MoltenVK 1.4.2 (macOS 26.5 / M5) delivers ONLY the highest-
+//   location written fragment output, into framebuffer SLOT 0; lower-location
+//   outputs are discarded (probes engine_vr/tmp/p7probe2/3/5/7.py, analysis in
+//   port/reports/phase7.md). The GL-era two-output G-buffer of
+//   engine/shaders/scene.frag:280-281 (fragColor=(t,kind,cell) at location 0,
+//   fragInfo at location 1; the engine reads kind from channel 1 of ATTACHMENT
+//   0 at engine/render.py:484) cannot exist as-is on this driver: a second
+//   color attachment would never receive fragInfo (kind passes then discard
+//   every pixel). The pano trace therefore keeps ONE color output (fragColor,
+//   the kind payload -> gt0) and routes h.info through an image store below
+//   (uGInfo -> gt1, a non-attachment image). Guarded by VR_PANO: the film
+//   programs compile the untouched fragColor+fragInfo pair (SPIR-V byte-
+//   identical, verified by build_p4 parity + the p7_parity.json hash sweep).
+uniform writeonly image2D uGInfo;   // h.info -> gt1 (SET_OF_NS image=3, auto binding)
+#else
 layout(location = 1) out vec4 fragInfo;
+#endif
 uniform sampler2D uCone;      // (perf4) cone pre-pass: the block's primary rays start there
 
 void main() {
@@ -313,7 +330,16 @@ void main() {
     float tFF = ffTrace(ro, rd, h.t, ffI);
     if (tFF < h.t) { h.t = tFF; h.kind = K_FALLSV; h.info = ffI; }
     fragColor = vec4(h.t, float(h.kind), vec2(h.cell));
+#ifdef VR_PANO
+    // FIXME(p7): info payload via image store (see the uGInfo declaration
+    //   above): gl_FragCoord.xy is the same texel the fragColor write would
+    //   have hit; gt1 rests in GENERAL layout for the whole frame, which is a
+    //   valid imageLayout both for this store and for the later uGBuf1 sampler
+    //   (GC hook b/c). gt1 is never a color attachment and never read back.
+    imageStore(uGInfo, ivec2(gl_FragCoord.xy), h.info);
+#else
     fragInfo = h.info;
+#endif
 }
 
 #else
