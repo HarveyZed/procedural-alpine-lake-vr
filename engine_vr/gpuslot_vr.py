@@ -320,6 +320,12 @@ def _release():
             HELD = None
 
 
+def release():
+    """Public release (passes_vr.open_host error path + close_host
+    call release(); the internal watchdog keeps using _release())."""
+    _release()
+
+
 def acquire():
     """Block until a GPU slot is free and enough memory is reclaimable."""
     global HELD

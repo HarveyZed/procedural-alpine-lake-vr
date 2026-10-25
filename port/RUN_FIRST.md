@@ -74,6 +74,9 @@ export ALPINE_COMPILE_GB=50
 export ALPINE_MIN_COMMIT_GB=24
 export ALPINE_MAX_GPU=1
 unset ALPINE_NO_SLOT
+mkdir -p "$ALPINE_CACHE"       # cache_schema never mkdirs; bake np.save needs it
+                                          # (first-run lesson 2026-10-25: B0 died
+                                          # FileNotFoundError h_far_raw.npy without it)
 .venv/bin/python port/gates/gate_p5.py | tail -3    # must still say GATE P5: PASS
 ```
 

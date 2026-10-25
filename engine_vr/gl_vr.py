@@ -574,7 +574,16 @@ class Host:
         # .decode), so it must NOT be re-decoded here.
         self.log(f"[gl_vr] device: {p.deviceName} "
                  f"type={p.deviceType} api=0x{p.apiVersion:x}")
-        rec = int(p.limits.recommendedMaxMemorySize)
+        # recommendedMaxMemorySize is absent from this binding's
+        # VkPhysicalDeviceLimits (vulkan 1.3.275.1 headers predate the field
+        # moving out of VkPhysicalDeviceMemoryBudgetPropertiesEXT): getattr to
+        # 0 falls the watchdog back to hw.memsize * factor (gpuslot_vr.py:
+        # budget_limit_gb), and the real heap budget still logs below via
+        # VK_EXT_memory_budget after device creation.
+        try:
+            rec = int(p.limits.recommendedMaxMemorySize)
+        except AttributeError:      # FIXME(first-run): binding lacks the field
+            rec = 0
         gs.configure_budget(rec)
         self.log(f"[gl_vr] recommendedMaxMemorySize="
                  f"{rec / 2 ** 30:.1f} GiB -> watchdog cap "
