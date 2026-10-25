@@ -268,11 +268,11 @@ derived from `cache_schema.FILES`, never from an existing cache.
 | Item | Size | Source |
 |---|---|---|
 | Unified memory | 262144 MB (256 GiB) | machine (`hw.memsize` 274877906944) |
-| `recommendedMaxMemorySize` → watchdog cap | **UNKNOWN until first run** (printed by `gl_vr.Host.open()`) | report (gl_vr.py:575-633 log lines) |
+| `recommendedMaxMemorySize` → watchdog cap | **MEASURED: field absent** in vulkan 1.3.275.1 bindings (Vulkan-1.4 maintenance8) → logged 0.0, fallback = `ALPINE_MAX_PROC_GB` (gl_vr first-run fix); real headroom via VK_EXT_memory_budget: **heap 0 budget 222.7 GiB** | first run 2026-10-25 |
 | Watchdog rule | cap = min(`ALPINE_MAX_PROC_GB`, 0.75 × recommendedMax), 6 GB headroom, 2.5 GB floor, 5 s poll, hard exit 3 | code (gpuslot_vr.py) |
 | Fresh shader-compile spike | 45000-50000 MB (45-50 GB) | report (gpuslot_vr docstring, ALPINE_COMPILE_GB default 50) |
 | GL-era full-res frame driver peak | ~17000 MB | report (tools/render_final.py comment) |
-| Erosion ~6 min, trees ~1 min GPU | time | report (bake_vr.py:236; phase4 §9.4) |
+| Erosion ~6 min, trees ~1 min GPU | **MEASURED: erosion 5 levels 35.8 s**; AO far/near 0.4/0.2 s; forest 8192² 0.5 s; noise3d <0.1 s | first run 2026-10-25 (bake group, see reports/first_run.md) |
 | Full bake on disk | ~4.0 GB total | code (cache_schema FILES sum) |
 | `RENDER_REQUIRED` minimum | ~832 MB (h_far 256 MB + h_near 64 MB + water_level 256 MB + forest 256 MB) | code |
 | `h_far_raw/h_eroded/h_far/erosion_*/flow/talus/sediment/water_level/stream_level_far` | 256 MB each (8192² f4) | code |
@@ -289,8 +289,10 @@ derived from `cache_schema.FILES`, never from an existing cache.
 | one tile readback 192² RGBA32F | 0.5625 MB | code |
 | tiles per sample at 8192×4096, `--tile 192` | **946** = ceil(8192/192) × ceil(4096/192) | code — note phase4 §8/§9 write **448**; see §6 |
 | readback traffic per sample per eye | ~532 MB (946 × 0.5625 MB) | code |
-| 8192×4096 mono `--spp 1` wall time | ESTIMATE: dominated by 946 × (2 draws + 1 readback) per sample; phase0 measured 0.46 s for one 256² frame including device open, which is not a per-tile rate. Treat as UNKNOWN until P13 measures it. | ESTIMATE |
-| Pipeline-cache reuse | ESTIMATE: second run should be far cheaper **if** P2-C3 persistence works — it was dead in phase2 (M2) and fixed in the P2 fix round; verify `pipeline cache: loaded N B` with N > 0 on run 2 | report |
+| 8192×4096 mono `--spp 1` wall time | **BLOCKED by P6** (march runaway at full res, port/PHASE_6.md). Partial measurement: 1267 draws/39.2 s before death; SBS 4096-per-eye measured 69.4 s for 16.8 Mpx total ⇒ mono 8192×4096 ≈ 2.5-3 min/sample when P6 lands. | first run; P6 pending |
+| Pipeline-cache reuse | **MEASURED PASS**: run 2 logs `pipeline cache: loaded 3609489 B`; ~40 s compile avoided | first run | (M2 fixed) |
+| Host RSS, SBS 4096×2048/eye spp1 | 10.2 GiB peak (run with ALPINE_MAX_PROC_GB=96: watchdog counts host RSS, driver budget is separate) | first run |
+| Host RSS, 8192×4096 tile loop | 2.1 GiB and flat (no leak) - P6 hang is GPU-side | first run |
 
 Two rules of thumb for the session: keep `ALPINE_MAX_GPU=1` while anything
 8K-sized is live, and treat a watchdog exit code 3 as a *result*, not a crash —
