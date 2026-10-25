@@ -136,3 +136,24 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   All 7 gates PASS on clean tree.
 - GC verification battery running (tmp/gcverify.log): A/B determinism recheck,
   C P6 repro signal, D kinds, E #13 FULL 8192x4096 + RSS/wall.
+
+## FINAL VERIFICATION (GC battery, quiescent tree @ p7-pass, 2026-10-25 16:34-16:54)
+- [A/B] determinism recheck: two 640x320 vp0 renders sha256 IDENTICAL
+  (4652a627e79dd171... - same prefix coder recorded). BUG B closed in GC too.
+- [C] P6 pass/fail signal: 640x320 tile64 --debug-foot-res 8192x4096 exit=0
+  (95s) - P6 fix verified independently.
+- [D] kinds vp0: unique {0..5}, water 2522 px; vp2: water 102129 px (50%).
+- [E] PROBE #13 PASS: 8192x4096 mono vp0 1spp exit 0, WALL 169.4 s,
+  PEAK RSS 19.06 GiB, mean 95.8 std 69.6, nonblack 99.78%, seam |d| 8.12,
+  zenith (99,144,206) vs equator (100,133,23), no pole dark bands (0/0%),
+  last-row 78.9 (ground under camera). Visual: full world renders (lake,
+  peaks, forest, sun, clouds).
+- VOID PROBES REDONE on real content: P8 vp6 mean 101.1 last-row 19.9 (was
+  46.8 sky-only; terrain now under flyover); P9 vp2 mean 118.9 teal-water
+  86.1%; P11 SBS 8192x2048 exit 0, L/R mean 87.6/115.2, mean|L-R| 27.96,
+  per-eye seams 9.5/9.4 (whole-image seam number meaningless for SBS -
+  metric artifact, recorded).
+- Packaging: package_vr real runs -> pkg_mono/ + pkg_sbs/ manifests;
+  ffmpeg 360-SBS test encode (4096x2048 half-packed, 8 s loop) per printed
+  argv - exit recorded below; 8K delivery = --packing full (documented).
+- RUN_FIRST #13 row + budget row flipped to PASS.
