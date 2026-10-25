@@ -212,3 +212,13 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   同向位移可见 (tmp/p11_v0/p11_v77.png)。预算实测 11.3 min/78帧 ≈ 8.7 s/帧
   @2048x1024, 比线性外推便宜 ~7x (单帧成本非纯像素线性, 静态帧锥预热摊薄)。
 - 待用户定档: 4096x2048@24fps 全片 9 镜。
+
+## HQ skim clip (user '来个4spp', 2026-10-25 22:14-22:41)
+- 4096x2048@24fps 4spp 156/156 frames, RENDER_EXIT=0, ~17.5 s/frame,
+  wall 27 min total; encode exit 0 -> engine_vr/out/clips/
+  clip_skim_4096x2048_24fps_4spp.mp4 (33.7 MiB hevc, equirect tags ok).
+- Exposure 0.808678466575212 identical to flow test (shared cache table -
+  keyed per shot/first-frame, deviation already disclosed in phase11 §2).
+- Budget correction final: per-frame cost ~ 6.7 us per Mspp (matches the
+  8192-static anchor); small-res clips are overhead-dominated. Full-film
+  (9 shots 60 s) at 4096x2048@24fps@4spp ~= 1440x17.5s ~= 7 h, NOT days.
