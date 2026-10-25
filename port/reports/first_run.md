@@ -78,3 +78,13 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   in #6. Manual still says /usr/bin/time in #6/#13 - flagged for RUN_FIRST fix.
 - #12 pole darkening top 34.6% bottom 74.6% = sky physics + terrain shade, no
   polar smear signature (row means smooth). PASS.
+
+### Probe #13 FAIL (device lost) -> BUG P6 filed (port/PHASE_6.md)
+- 8192x4096 vp0: deterministic VkErrorDeviceLost mid-tile-loop; RSS flat,
+  validation clean => GPU-time hang (driver force-kill), NOT memory.
+- Localization: tile 1024 PASS; tile 64 death trace rect (4352,1408,64,64)
+  draw 8792; 512-run died near (5376,1536) (may be cone coords). 6144x3072
+  and SBS pass => smallest per-texel footprint at 8192 exposes a march-loop
+  runaway (or NaN-epsilon) in a crevice near lon +11.25/lat +28.1.
+- Coder dispatched per RUNBOOK (fix engine/shaders/, <=2min GPU cap, no
+  visual-math retuning, glslc/spirv-val static gate gate_p6.py).
