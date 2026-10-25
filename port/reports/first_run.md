@@ -157,3 +157,17 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   ffmpeg 360-SBS test encode (4096x2048 half-packed, 8 s loop) per printed
   argv - exit recorded below; 8K delivery = --packing full (documented).
 - RUN_FIRST #13 row + budget row flipped to PASS.
+
+### Packaging defect found+fixed (GC, first real run)
+- RUN_FIRST/package_vr printed '-metadata:s:v:0 ...' for the 360 video:
+  ffmpeg 9.0.2 SILENTLY DROPS stream-level custom tags in MP4 (measured,
+  with and without map_metadata). Fixed to container-level '-metadata'
+  (+use_metadata_tags -> mdta): re-encoded turntable now carries
+  projection=equirectangular / projection_range=full / stereo_mode=sbs_half
+  / SIDE_BY_SIDE_HALF (ffprobe verified). Stream-level remains the job of
+  dedicated 360 tooling; container tags suffice for the tested viewers.
+- DELIVERED ARTIFACTS (engine_vr/out/, gitignored): pano_vp0_mono.png
+  8192x4096; pano_vp1_sbs.png 8192x2048; pkg_mono/ + pkg_sbs/ manifests;
+  pkg_sbs/turntable_4096x2048_sbs_half.mp4 (8s, hevc, tagged). 8K-class
+  delivery = same flow, vr.py 8192/eye + package --packing full.
+- FIRST-RUN A: COMPLETE. All ladder steps green on quiescent tree @ p7-pass.

@@ -168,8 +168,14 @@ def build_ffmpeg(target, n_frames, args, stereo, packing, ew, eh):
     if args.hevc_params:
         argv += ["-x265-params", args.hevc_params]
     argv += ["-movflags", "+faststart+use_metadata_tags"]
+    # FIXME(gc, first-run): ffmpeg 9.0.2 silently DROPS stream-level custom
+    # tags (-metadata:s:v:0) in MP4 - measured: ffprobe shows none after
+    # encode, with or without map_metadata. Container-level tags survive
+    # (+use_metadata_tags -> mdta keys). Stream-level is only honoured by
+    # dedicated 360 tooling (Google SpatialMedia/MP4Box), which we do not
+    # require; container projection tags are what the tested viewers read.
     for k, v in tg:
-        argv += ["-metadata:s:v:0", k + "=" + v]
+        argv += ["-metadata", k + "=" + v]
     if args.out:
         out_path = args.out
     else:
@@ -412,7 +418,7 @@ def main(argv=None):
         print("")
         print("equirect / spherical metadata that command writes:")
         for k, v in tags(stereo, packing, args.tag_pairs):
-            print("  -metadata:s:v:0 " + k + "=" + v)
+            print("  -metadata " + k + "=" + v)   # FIXME(gc): container-level
         print("NOTE: those tags are UNVERIFIED against any headset or ingest "
               + "service; override with --tag KEY=VALUE after the first playback "
               + "test (port/reports/phase5.md open unknowns).")
