@@ -328,13 +328,18 @@ def bake_pass(program, res, uniforms, textures=(), tile=512, comps=1,
     target = h.make_target(res, res, 1, fmt_name,
                            "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL")
     t0 = time.time()
-    for y in range(0, res, tile):
-        for x in range(0, res, tile):
-            cmd = h.begin()
-            h.draw(prog, target, (x, y, tile, tile), cmd=cmd)
-            h.end()                  # submit + wait == the engine's finish()
-    a = read_image(target.images[0])
-    destroy_target(target)
+    try:
+        # N3 (review_p3): a failed tile draw or readback used to leak the
+        # 4096^2 RGBA32F target (up to 1.07 GiB); the teardown now runs no
+        # matter how the loop exits.
+        for y in range(0, res, tile):
+            for x in range(0, res, tile):
+                cmd = h.begin()
+                h.draw(prog, target, (x, y, tile, tile), cmd=cmd)
+                h.end()              # submit + wait == the engine's finish()
+        a = read_image(target.images[0])
+    finally:
+        destroy_target(target)
     if log:
         log(f"  {name} {res}^2 in {time.time() - t0:.1f}s")
     return a[..., 0] if comps == 1 else a

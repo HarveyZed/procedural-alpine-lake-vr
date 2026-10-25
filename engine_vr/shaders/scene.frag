@@ -144,6 +144,25 @@ vec3 shadeHit(Hit h, vec3 ro, vec3 rd, bool cheap) {
 #endif
 
 void cameraRay(out vec3 ro, out vec3 rd) {
+#ifdef VR_PANO
+    // T3 (port/RUNBOOK.md §6, BINDING): equirect texel centre -> direction.
+    // lon = -pi + (frag.x/W)*2pi, lat = (frag.y/H - 0.5)*pi with frag the
+    // (jittered) pixel CENTRE coords - at frag = (x+0.5, y+0.5) this is
+    // exactly the pixel-centre formula of engine_vr/pano.equirect_directions
+    // (frag y grows up = lat grows; the readback flip at the PNG step
+    // reproduces the §6 top-down row order, same place as the engine's
+    // engine/render.py:505 display flip). gPixAng becomes the per-texel
+    // footprint from the panoFoot strip. The DOF aperture branch below is
+    // NOT copied: a pano has no lens (vr.py always sets uAperture = 0).
+    vec2 frag = gl_FragCoord.xy + uJitter;   // FIXME(port)
+    int iFrame = int(floor(uTime * 24.0 + 0.5));   // FIXME(port)
+    gRand = hash12i(ivec2(gl_FragCoord.xy) + ivec2(uSample * 7919 + iFrame * 31337, uSample * 104729 + iFrame * 7121));   // FIXME(port)
+    float lon = (frag.x / uRes.x * 2.0 - 1.0) * PI;   // FIXME(port)
+    float lat = (frag.y / uRes.y - 0.5) * PI;   // FIXME(port)
+    gPixAng = panoFootAt(frag.y);   // FIXME(port)
+    ro = uCamPos;   // FIXME(port)
+    rd = uCamRot * vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));   // FIXME(port)
+#else
     vec2 frag = gl_FragCoord.xy + uJitter;
     // (r5 qa5 B13) + a frame term: the sample noise no longer sits fixed on the screen while the scene moves
     int iFrame = int(floor(uTime * 24.0 + 0.5));
@@ -160,6 +179,7 @@ void cameraRay(out vec3 ro, out vec3 rd) {
         ro += uCamRot * vec3(cos(ang) * rad, sin(ang) * rad, 0.0);
         rd = normalize(fp - ro);
     }
+#endif
 }
 
 #if SCENE_PASS == 98
@@ -204,11 +224,26 @@ float coneTrace(vec3 ro, vec3 rd, float th) {
     return t;
 }
 void main() {
+#ifdef VR_PANO
+    // T3: the cone pre-pass of a pano - the block's centre maps through the
+    // SAME equirect formula (the engine uses frag * 4.0 as the block centre
+    // here; 4.0 * (c + 0.5) is the centre texel-coord of 4 x 4 block c, so
+    // lon/lat below are the block centre in the pano parameterisation).
+    // The cone half-angle uses the footprint AT the block centre.
+    vec2 fc = gl_FragCoord.xy * 4.0;   // FIXME(port)
+    float lon = (fc.x / uRes.x * 2.0 - 1.0) * PI;   // FIXME(port)
+    float lat = (fc.y / uRes.y - 0.5) * PI;   // FIXME(port)
+    gPixAng = panoFootAt(fc.y);   // FIXME(port)
+    vec3 rd = uCamRot * vec3(cos(lat) * sin(lon), sin(lat), cos(lat) * cos(lon));   // FIXME(port)
+    // half-diagonal of the block (2.83 px) + margin
+    fragColor = vec4(coneTrace(uCamPos, rd, 3.0 * gPixAng), 0.0, 0.0, 1.0);   // FIXME(port)
+#else
     gPixAng = 2.0 * uTanHalfFov / uRes.y;
     vec2 ndc = (2.0 * (gl_FragCoord.xy * 4.0) - uRes) / uRes.y;     // the block's centre
     vec3 rd = uCamRot * normalize(vec3(ndc * uTanHalfFov, 1.0));
     // half-diagonal of the block (2.83 px) + margin
     fragColor = vec4(coneTrace(uCamPos, rd, 3.0 * gPixAng), 0.0, 0.0, 1.0);
+#endif
 }
 
 #elif SCENE_PASS == 99

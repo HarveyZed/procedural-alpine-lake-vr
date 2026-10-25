@@ -6028,6 +6028,4130 @@
     "storage_images": 0,
     "separate_sampled_images": 0
    }
+  },
+  {
+   "name": "scene_pano_cone",
+   "source": "engine_vr/shaders_gen/scene_pano_cone.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "98",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect cone pre-pass: block-centre lon/lat ray, per-texel footprint strip for the cone half-angle",
+   "mode": "reduced",
+   "glslc_seconds": 0.17,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 15,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_cone.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_trace",
+   "source": "engine_vr/shaders_gen/scene_pano_trace.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "99",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uCone",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect primary raygen: texel-centre lon/lat ray (RUNBOOK \u00a76), gPixAng = per-texel footprint, no DOF",
+   "mode": "reduced",
+   "glslc_seconds": 0.26,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 16,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_trace.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    },
+    {
+     "name": "fragInfo",
+     "location": 1,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind0_sky",
+   "source": "engine_vr/shaders_gen/scene_pano_kind0_sky.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "0",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 0 (sky); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.12,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind0_sky.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind1_terrain",
+   "source": "engine_vr/shaders_gen/scene_pano_kind1_terrain.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "1",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 1 (terrain); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.32,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind1_terrain.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind2_tree",
+   "source": "engine_vr/shaders_gen/scene_pano_kind2_tree.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "2",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 2 (tree); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.18,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind2_tree.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind3_rock",
+   "source": "engine_vr/shaders_gen/scene_pano_kind3_rock.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "3",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 3 (rock); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.22,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind3_rock.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind4_water",
+   "source": "engine_vr/shaders_gen/scene_pano_kind4_water.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "4",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 4 (water); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.67,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind4_water.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind5_cover",
+   "source": "engine_vr/shaders_gen/scene_pano_kind5_cover.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "5",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 5 (cover); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.27,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind5_cover.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind6_hero",
+   "source": "engine_vr/shaders_gen/scene_pano_kind6_hero.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "6",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 6 (hero); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.16,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind6_hero.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
+  },
+  {
+   "name": "scene_pano_kind7_flora",
+   "source": "engine_vr/shaders_gen/scene_pano_kind7_flora.frag",
+   "stage": "frag",
+   "defines": {
+    "QUALITY": "1",
+    "SCENE_PASS": "7",
+    "VR_PANO": "1"
+   },
+   "bindings": [
+    {
+     "name": "_p1_pass",
+     "kind": "uniform_block",
+     "set": 1,
+     "binding": 0,
+     "glsl_type": "std140 uniform _p1_pass",
+     "block": "_p1_pass"
+    },
+    {
+     "name": "uHNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 0,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uHFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 1,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAONear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 2,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uAOFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 3,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uForest",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 4,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvl",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 5,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uWaterLvlNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 6,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 7,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uNoise3",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 8,
+     "glsl_type": "sampler3D"
+    },
+    {
+     "name": "uTrees",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 9,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShNear",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 10,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uShFar",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 11,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "panoFoot",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 12,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uTreeTop",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 13,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uStreamCorr",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 14,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf0",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 15,
+     "glsl_type": "sampler2D"
+    },
+    {
+     "name": "uGBuf1",
+     "kind": "combined_sampler",
+     "set": 0,
+     "binding": 16,
+     "glsl_type": "sampler2D"
+    }
+   ],
+   "engine_source": "engine/shaders/scene.frag",
+   "call_site": "vr.py (Phase-4 pano renderer, T3)",
+   "note": "equirect kind-pass 7 (flora); directions identical to scene_pano_trace",
+   "mode": "reduced",
+   "glslc_seconds": 0.16,
+   "compiled": true,
+   "validated": true,
+   "port_stats": {
+    "loose_uniforms": 47,
+    "locations_injected": 0,
+    "explicit_bindings": 0,
+    "split_declarations": 0,
+    "samplers": 17,
+    "images": 0,
+    "uniform_blocks": 1,
+    "storage_blocks": 0
+   },
+   "spirv": "engine_vr/spirv/scene_pano_kind7_flora.spv",
+   "uniform_block": {
+    "name": "_p1_pass",
+    "storage": "std140",
+    "set": 1,
+    "binding": 0,
+    "size_bytes": 5824,
+    "members": [
+     {
+      "name": "uCamPos",
+      "type": "vec3",
+      "offset": 0
+     },
+     {
+      "name": "uTime",
+      "type": "float",
+      "offset": 12
+     },
+     {
+      "name": "uTrail",
+      "type": "vec4",
+      "offset": 16
+     },
+     {
+      "name": "uTrailN",
+      "type": "int",
+      "offset": 528
+     },
+     {
+      "name": "uPixAng",
+      "type": "float",
+      "offset": 532
+     },
+     {
+      "name": "uSunDir",
+      "type": "vec3",
+      "offset": 544
+     },
+     {
+      "name": "uSunIntensity",
+      "type": "float",
+      "offset": 556
+     },
+     {
+      "name": "uHaze",
+      "type": "float",
+      "offset": 560
+     },
+     {
+      "name": "uCloudCover",
+      "type": "float",
+      "offset": 564
+     },
+     {
+      "name": "uWind",
+      "type": "vec2",
+      "offset": 568
+     },
+     {
+      "name": "uSunCol",
+      "type": "vec3",
+      "offset": 576
+     },
+     {
+      "name": "uSkyAmb",
+      "type": "vec3",
+      "offset": 592
+     },
+     {
+      "name": "uSkyHorizon",
+      "type": "vec3",
+      "offset": 608
+     },
+     {
+      "name": "uSkyBoost",
+      "type": "float",
+      "offset": 620
+     },
+     {
+      "name": "uSkyDesat",
+      "type": "float",
+      "offset": 624
+     },
+     {
+      "name": "uWaterWind",
+      "type": "vec2",
+      "offset": 632
+     },
+     {
+      "name": "uWaveStrength",
+      "type": "float",
+      "offset": 640
+     },
+     {
+      "name": "uWaterIns",
+      "type": "vec3",
+      "offset": 656
+     },
+     {
+      "name": "uTune",
+      "type": "float",
+      "offset": 672
+     },
+     {
+      "name": "uStreamCorrBox",
+      "type": "vec4",
+      "offset": 1056
+     },
+     {
+      "name": "uRes",
+      "type": "vec2",
+      "offset": 1072
+     },
+     {
+      "name": "uJitter",
+      "type": "vec2",
+      "offset": 1080
+     },
+     {
+      "name": "uCamRot",
+      "type": "mat3",
+      "offset": 1088
+     },
+     {
+      "name": "uTanHalfFov",
+      "type": "float",
+      "offset": 1136
+     },
+     {
+      "name": "uAperture",
+      "type": "float",
+      "offset": 1140
+     },
+     {
+      "name": "uFocusDist",
+      "type": "float",
+      "offset": 1144
+     },
+     {
+      "name": "uSample",
+      "type": "int",
+      "offset": 1148
+     },
+     {
+      "name": "uExposureHint",
+      "type": "float",
+      "offset": 1152
+     },
+     {
+      "name": "uLab",
+      "type": "float",
+      "offset": 1168
+     },
+     {
+      "name": "uShadowDir",
+      "type": "vec3",
+      "offset": 1424
+     },
+     {
+      "name": "uDebug",
+      "type": "int",
+      "offset": 1436
+     },
+     {
+      "name": "uWF",
+      "type": "vec4",
+      "offset": 1440
+     },
+     {
+      "name": "uWFDir",
+      "type": "vec2",
+      "offset": 1456
+     },
+     {
+      "name": "uWFNotch",
+      "type": "vec4",
+      "offset": 1472
+     },
+     {
+      "name": "uFallsOn",
+      "type": "int",
+      "offset": 1488
+     },
+     {
+      "name": "uFallK",
+      "type": "vec4",
+      "offset": 1504
+     },
+     {
+      "name": "uFallInfo",
+      "type": "vec4",
+      "offset": 2272
+     },
+     {
+      "name": "uFallBox",
+      "type": "vec4",
+      "offset": 2304
+     },
+     {
+      "name": "uStream",
+      "type": "vec4",
+      "offset": 2368
+     },
+     {
+      "name": "uStreamN",
+      "type": "int",
+      "offset": 3904
+     },
+     {
+      "name": "uStreamBox",
+      "type": "vec4",
+      "offset": 3920
+     },
+     {
+      "name": "uStreamS",
+      "type": "float",
+      "offset": 3936
+     },
+     {
+      "name": "uStreamMouth",
+      "type": "vec4",
+      "offset": 5472
+     },
+     {
+      "name": "uHeroA",
+      "type": "vec4",
+      "offset": 5488
+     },
+     {
+      "name": "uHeroB",
+      "type": "vec4",
+      "offset": 5584
+     },
+     {
+      "name": "uHeroN",
+      "type": "int",
+      "offset": 5680
+     },
+     {
+      "name": "uW2K",
+      "type": "vec4",
+      "offset": 5696
+     }
+    ]
+   },
+   "outputs": [
+    {
+     "name": "fragColor",
+     "location": 0,
+     "type": "vec4"
+    }
+   ],
+   "reflect_counts": {
+    "ubos": 1,
+    "ssbos": 0,
+    "storage_images": 0,
+    "separate_sampled_images": 0
+   }
   }
  ],
  "extra_variants_checked": [

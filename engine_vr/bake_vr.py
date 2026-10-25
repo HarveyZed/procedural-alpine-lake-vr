@@ -905,3 +905,83 @@ def bake_all(force=False):
     return dict(hfar=hfar, hnear=hnear, aof=aof, aon=aon, level=level, forest=forest, noise3=n3)  # noqa: E501
 
 # ==== END ENGINE COPIES ====
+
+# ================================================================ Phase-4 T1
+#
+# trees.npy and shadow-map drivers for the pano renderer (vr.py). The engine
+# produces both lazily around World.__init__:
+#
+#   trees.npy     engine/render.py:166-180 World._bake_trees - the writer
+#                 cache_schema.py documents for this Phase-4 product
+#   shadow maps   engine/render.py:182-205 World.ensure_shadows - runtime
+#                 textures only, never saved to disk; a pano render has one
+#                 sun, so the engine's _sun_key reuse cache is not needed.
+#
+# Both run through passes_vr.bake_pass (same tile + per-tile finish rhythm
+# as the engine tile loops) and need an installed Host
+# (passes_vr.open_host first).
+
+
+def _trees_textures(textures):
+    """12-sampler binding list for bake_trees from the world texture dict.
+
+    The engine binds 10 textures at that point (its dict has no uTrees /
+    uShNear / uShFar yet - trees and shadows bake after it); the P1
+    manifest reflects the final shader and the SPIR-V keeps all 12 sampler
+    slots, so the descriptor set demands them. vr.py passes a shared 4x4
+    zero f4 dummy Tex under the key '_zero4' for the three the engine never
+    supplied at this stage.
+    """
+    want = ["uHNear", "uHFar", "uAONear", "uAOFar", "uForest", "uWaterLvl",
+            "uWaterLvlNear", "uStreamNear", "uNoise3", "uTrees",
+            "uShNear", "uShFar"]
+    dummy = textures.get("_zero4")
+    out = []
+    for n in want:
+        t = textures.get(n, dummy)
+        if t is None:
+            raise pv.GlvrError(f"bake_trees: missing texture {n}")
+        out.append((n, t))
+    return out
+
+
+def ensure_trees(textures, tile=1024, log=print):
+    """trees.npy driver - copied semantics from engine/render.py:166-180.
+
+    One bake_trees.frag full 4096^2 RGBA32F, tiles of 1024 each flushed
+    (the engine's tile loop + c.finish()), read back and np.save'd to the
+    cache_schema path (f4, 4096^2, 4 comps, NEAR_HALF - the writer at
+    engine/render.py:178). Returns the float32 (4096, 4096, 4) array.
+    """
+    path = cs.path("trees.npy")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    a = pv.bake_pass("bake_trees", cs.NEAR_RES, {},
+                     textures=_trees_textures(textures), tile=tile,
+                     comps=4, log=log).astype(np.float32)
+    np.save(path, a)
+    n = float((a[..., 1] != 0).sum()) / 1e6
+    if log:
+        log(f"  trees: {n:.2f} M")   # engine count print, render.py:180
+    return a
+
+
+def bake_shadows(textures, sun_dir, tile=512, log=print):
+    """Shadow-map pair - copied semantics from engine/render.py:182-205.
+
+    Two bake_shadow.frag passes (near then far), each 4096^2 RGBA32F,
+    tiles of 512 (both the engine tile size), the same uniforms the engine
+    p.set()s (uCenter (0,0), uHalf, uRes 4096, uFarHalf, uSunDir). Outputs
+    upload LINEAR-filtered, clamped (the engine sets .filter=LINEAR with
+    repeat off). Returns {"uShNear": Tex, "uShFar": Tex}."""
+    out = {}
+    for name, src, half in (("uShNear", "uHNear", NEAR_HALF),
+                            ("uShFar", "uHFar", FAR_HALF)):
+        a = pv.bake_pass(
+            "bake_shadow", 4096,
+            {"uCenter": (0.0, 0.0), "uHalf": float(half), "uRes": 4096.0,
+             "uFarHalf": FAR_HALF,
+             "uSunDir": tuple(float(v) for v in sun_dir)},
+            textures=[("uH", textures[src]), ("uHFar", textures["uHFar"])],
+            tile=tile, comps=4, log=log)
+        out[name] = pv.upload(a, filt="linear")
+    return out

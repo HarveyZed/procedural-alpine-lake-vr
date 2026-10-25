@@ -29,6 +29,40 @@ uniform float uTime;
 uniform vec4 uTrail[32];
 uniform int uTrailN;
 uniform float uPixAng;     // radians per pixel of the current camera
+#ifdef VR_PANO
+// T3 (port/PHASE_4.md): equirectangular panorama mode. uPixAng is a
+// per-camera CONSTANT, but an equirect texel's angular footprint varies
+// with latitude (port/RUNBOOK.md §6): fp(lat) = max(dLat, dLon*cos lat).
+// panoFoot is the 1 x H R32F strip vr.py uploads from
+// engine_vr/pano.texel_footprint(); row y carries the exact footprint of
+// latitude band y. Redefining uPixAng here makes EVERY uPixAng consumer
+// (this file, rocks.glsl, trees.glsl, shade_trees.glsl) sample the
+// per-texel footprint without those files being touched. The footprint is
+// symmetric in latitude, so the GL/Vulkan frag-y order vs the numpy row
+// order of the strip is irrelevant. Every added line FIXME(port); the
+// scene_pano_* programs are the only ones compiled with -DVR_PANO - all
+// base programs resolve this whole branch away before vulkanize, so their
+// generated sources and SPIR-V are unchanged (build_p4.py parity check).
+uniform sampler2D panoFoot;   // FIXME(port)
+float panoFootAt(float y) {   // FIXME(port)
+    return texelFetch(panoFoot, ivec2(0, int(clamp(y, 0.0, uRes.y - 1.0))), 0).r;   // FIXME(port)
+}                             // FIXME(port)
+#if SCENE_PASS == 98
+// FIXME(port): the cone pass (SCENE_PASS 98) draws into a QUARTER-res rect
+// ((w+3)/4 x (h+3)/4 in vr.py; engine analogue engine/render.py:472-479),
+// so gl_FragCoord.y here is a CONE row while panoFoot rows carry FULL-res
+// latitudes. Scale by 4.0 so the uPixAng consumers inside the shared
+// SDF/LOD helpers (terrainHD :156, treesSDF, rocksSDF) read the same
+// latitude band as this pass's main(), which already samples the block
+// centre via fc = gl_FragCoord.xy * 4.0; gPixAng = panoFootAt(fc.y).
+// Without the scale the entire cone pass indexes the bottom-quarter band
+// of the strip whenever W < 2H (port/reports/review_p4.md M1); the
+// trace/kind passes keep the unscaled row lookup on the #else side.
+#define uPixAng panoFootAt(gl_FragCoord.y * 4.0)   // FIXME(port) cone rows are quarter-res
+#else
+#define uPixAng panoFootAt(gl_FragCoord.y)   // FIXME(port) per-texel footprint, not a constant
+#endif
+#endif
 
 // beyond the map edge the far maps are mirrored (no clamped streaks toward the horizon)
 vec2 farUV(vec2 p) { vec2 u = p / (2.0 * FAR_HALF) + 0.5; return 1.0 - abs(1.0 - mod(u, 2.0)); }

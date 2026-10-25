@@ -121,8 +121,8 @@ def build_body(target, blocks):
     return "".join(out).rstrip("\n") + "\n"
 
 
-def splice(target, body):
-    path = HERE / target
+def splice(target, body, path=None):
+    path = Path(path) if path is not None else HERE / target
     text = path.read_text(encoding="utf-8")
     if BEGIN not in text or END not in text:
         raise SystemExit(f"{target}: copy markers not found")
@@ -352,17 +352,41 @@ def main():
     report = []
     for target, blocks in COPIES.items():
         body = build_body(target, blocks)
+        copied = sum(e - s + 1 for _n, s, e, _b in blocks)
+        if args.check:
+            # N2 (review_p3): --check used to splice the file first and only
+            # then raise. Run the FULL pipeline on a scratch copy and diff
+            # it instead - the real file is never written in this mode (and
+            # the trailing ruff pass is read-only).
+            import difflib
+            import tempfile
+            path = HERE / target
+            text = path.read_text(encoding="utf-8")
+            with tempfile.TemporaryDirectory(prefix="p3check_") as td:
+                scratch = Path(td) / target
+                scratch.write_text(text, encoding="utf-8")
+                scratch, new = splice(target, body, path=scratch)
+                lo, hi = region_rows(new)
+                rewrap_docstrings(scratch, lo, hi, report)
+                lo, hi = region_rows(scratch.read_text(encoding="utf-8"))
+                annotate(scratch, lo, hi, report)
+                after = scratch.read_text(encoding="utf-8")
+            delta = list(difflib.unified_diff(text.splitlines(),
+                                              after.splitlines(),
+                                              lineterm="", n=0))
+            ndiff = max(len(delta) - 2, 0)
+            state = "up to date" if not ndiff else f"WOULD CHANGE ({ndiff} diff lines)"
+            print(f"{target}: {state}, {len(after.splitlines())} lines "
+                  f"total, {copied} copied engine lines, region {lo}-{hi}")
+            continue
         path, new = splice(target, body)
         lo, hi = region_rows(new)
         rewrap_docstrings(path, lo, hi, report)
         lo, hi = region_rows(path.read_text(encoding="utf-8"))
         annotate(path, lo, hi, report)
         n = len(new.splitlines())
-        copied = sum(e - s + 1 for _n, s, e, _b in blocks)
         print(f"{target}: {n} lines total, {copied} copied engine lines, "
               f"region {lo}-{hi}")
-        if args.check:
-            raise SystemExit("--check is not supported after splicing")
     for line in report:
         print("NOTE " + line)
     leftover = []
