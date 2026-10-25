@@ -222,3 +222,13 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
 - Budget correction final: per-frame cost ~ 6.7 us per Mspp (matches the
   8192-static anchor); small-res clips are overhead-dominated. Full-film
   (9 shots 60 s) at 4096x2048@24fps@4spp ~= 1440x17.5s ~= 7 h, NOT days.
+
+## skim full-shot 48fps (user '直接出一镜 48fps', 01:48-03:51 + re-encode 03:5x)
+- 312/312 frames 4096x2048@12spp fps48 shutter0.5 shake ON, attempt-0 clean,
+  ~23 s/frame avg (first frames incl 4GB cache upload skewed estimate to 60 s).
+- Wrapper defect (mine, GC): hand-written ffmpeg line omitted -framerate/-r
+  48 -> demux defaulted 25fps (12.48 s output). FIXED by re-running vr.py's
+  own printed ENCODE argv (sed: crf22->16, out->clips). Final: 4096x2048
+  48/1 fps, 6.500 s, 62 MiB @ ~80 Mb/s, equirect tags. RULE: never
+  re-handwrite the encode line; use the printed argv verbatim.
+- Artifact: engine_vr/out/clips/skim_4096x2048_48fps_12spp_shutter.mp4
