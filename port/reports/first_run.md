@@ -62,3 +62,19 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
 - TOOLING LESSON: python-heredoc write to erosion_vr.py reported success but did
   NOT persist (second silent-drop; heapq one persisted, this one didn't - reason
   unknown). tools.edit DID persist. All future code fixes via read+edit tools.
+
+### Probe ladder #7-#12: 4 first-run bugs fixed, then ALL PASS
+- #7 died: vkCmdClearColorImage needs VkClearColorValue* not VkClearValue*
+  (vr.py _clear_images) FIXED; then "command session already active": the probe
+  block wrapped draw(cmd=None one-shot) in host.begin()/end() (vr.py:969/977)
+  FIXED (drop outer pair; uniform writes need no cmd). PASS: 512x256 forest,
+  exposure 0.353, 99.8% nonblack, validation clean.
+- #8 vp6 flyover: row0 120 / mid 195 / last 47, seam |d| 2.52 (0.4 sigma). PASS.
+- #9 vp2 skim PASS (exposure 0.861). #10 sky zenith (62,92,137 blue) vs
+  equator (153,172,174 hazy horizon) - gradient physically right. PASS.
+- #11 SBS vp1 8192x2048: parallax mean|L-R| 37.0, 69.4 s, peak RSS 10.2 GiB.
+  NOTE: /usr/bin/time -l strips DYLD_* (SIP) -> vulkan import fails; operator
+  must measure in-process (resource.ru_maxrss, bytes on macOS). Lesson also hit
+  in #6. Manual still says /usr/bin/time in #6/#13 - flagged for RUN_FIRST fix.
+- #12 pole darkening top 34.6% bottom 74.6% = sky physics + terrain shade, no
+  polar smear signature (row means smooth). PASS.

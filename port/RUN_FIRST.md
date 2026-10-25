@@ -299,6 +299,11 @@ it means the budget you set is smaller than the pass, so raise
 
 ---
 
+
+> OPERATOR (first-run): do NOT wrap GPU steps in /usr/bin/time -l - SIP strips
+> DYLD_* and 'import vulkan' dies ("Cannot find Vulkan SDK version"). Measure
+> in-process: resource.getrusage(RUSAGE_SELF).ru_maxrss (bytes on macOS).
+
 ## 5. The probe ladder
 
 Numbering is global and frozen: P1-P6 are `phase3.md` §"Open risks" and P7-P13
@@ -495,7 +500,7 @@ print('forest', f.shape, f.dtype, 'coverage', float((f[..., 0] > 0).mean()))
   `import time` bookkeeping:
 
 ```bash
-cd /path/to/procedural-alpine-lake && /usr/bin/time -l .venv/bin/python -c "
+cd /path/to/procedural-alpine-lake && .venv/bin/python -c "
 import numpy as np, time
 from engine_vr import erosion_vr as ev
 t = time.time()
@@ -724,7 +729,14 @@ print('pole darkening vs equator: top %.1f%%  bottom %.1f%%' % (100*(1-top/eq), 
   §8 names for peak RSS):
 
 ```bash
-cd /path/to/procedural-alpine-lake && ALPINE_CACHE=$PWD/cache_final ALPINE_MAX_PROC_GB=96 /usr/bin/time -l .venv/bin/python vr.py --viewpoint 0 --res 8192x4096 --spp 1 --out engine_vr/out/p4_p13.png
+cd /path/to/procedural-alpine-lake && ALPINE_CACHE=$PWD/cache_final ALPINE_MAX_PROC_GB=96 .venv/bin/python -c "
+import sys, time, resource
+sys.argv = ['vr.py', '--viewpoint', '0', '--res', '8192x4096', '--spp', '1', '--out', 'engine_vr/out/p4_p13.png']
+t = time.time()
+import vr; vr.main()
+print('sec', round(time.time()-t, 1), 'peak RSS MB',
+      resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // (1024*1024))
+"
 ```
 
 - Expect: it finishes without a watchdog exit 3, and you get wall time +

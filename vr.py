@@ -834,8 +834,10 @@ def _clear_images(host, imgs):
                   for im in imgs])
     for im in imgs:
         im.layout = vkv.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-    clr = vkv.ffi.new("VkClearValue[1]")
-    clr[0].color.float32 = [0.0, 0.0, 0.0, 0.0]
+    # vkCmdClearColorImage takes VkClearColorValue*, NOT the VkClearValue
+    # wrapper that render passes use (first-run fix: cffi TypeError otherwise)
+    clr = vkv.ffi.new("VkClearColorValue[1]")
+    clr[0].float32 = [0.0, 0.0, 0.0, 0.0]
     rng = [vkv.VkImageSubresourceRange(
         aspectMask=vkv.VK_IMAGE_ASPECT_COLOR_BIT, levelCount=1,
         layerCount=1)]
@@ -961,10 +963,12 @@ def _render(args, w, h, eye_tags):
         # the engine probes a single camera position per frame - the film
         # passes cams[0].pos. FIXME(port): the pano takes that head-centre
         # probe for BOTH eyes; the 0.032 m eye parallax of the sky probe is
-        # below the probe's own sample footprint) ----
         lookf = _look_fields(look, 0.0, world.features, heroes)
         pm = set(ubo_member_names(progs["probe"]))
-        host.begin()
+        # NOTE(first-run): NO host.begin() here - host.draw() below is a
+        # one-shot session (draw(cmd=None) owns begin/end, gl_vr.py:1281);
+        # wrapping it in an external session raised "command session
+        # already active". Uniform writes need no command buffer.
         pf = dict(lookf)
         pf["uProbePos"] = tuple(map(float, pos))
         pv.write_uniforms(built["probe"], {k: v for k, v in pf.items()
@@ -972,7 +976,6 @@ def _render(args, w, h, eye_tags):
         ptar = host.make_target(3, 1, 1, pv.TARGET_FORMAT,
                                 "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL")
         host.draw(built["probe"], ptar, rect=(0, 0, 3, 1), cleared=True)
-        host.end()
         pa = pv.read_image(ptar.images[0])[0]
         sun, sky, hor = pa[0][:3], pa[1][:3], pa[2][:3]
 
