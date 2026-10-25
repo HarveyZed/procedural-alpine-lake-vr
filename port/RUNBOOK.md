@@ -104,6 +104,15 @@ parallel projection (no convergence), eye offsets ±0.032 m along camera-right, 
   bindings; GLSL 450 → glslc → SPIR-V; `source tools/vk/env.sh` before any `import vulkan`).
   Evidence: port/reports/phase0.md + gate_p0 PASS on independent GC run + GC-recomputed PSNR from
   PPMs (A-vs-CPU-ref 98.06 dB, maxdiff 1/255; A↔B bit-identical; non-degenerate std≈50). GLSL +
+- D8 (first run, 2026-10-25, after a false-alarm collision): **exclusive tree
+  ownership while a coder session is active.** GC must NOT run the project,
+  builds, or gates that compile shaders_gen/, and must not write any file the
+  active phase owns; verification runs happen strictly between phases on a
+  quiescent tree. Coders disclose shaders_gen/spirv batch writes (files +
+  purpose + window <90 s) to GC and leave no non-compiling generated file at
+  batch end. Rationale: generated trees are shared-state; a mid-experiment
+  window is not evidence about a commit (GC nearly recalled a correct P6
+  commit over P7's in-flight debug injection).
   glstrip survive verbatim; B (wgpu-py) kept as documented fallback (its 0.32.0 ABI/draw bugs are
   in phase0 report §risks). Zero GPU runs resume now — P0 exemption consumed; erosion rg32f image
   atomics-through-MoltenVK remains UNVERIFIED (hedge + verification step live in P5 first-run doc).

@@ -111,3 +111,9 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
 - Housekeeping: vr.py carries 10 pre-existing ruff errors since P4 (incl.
   EXE001 shebang); not P6-introduced; gates never ruffed vr.py. Note for
   final sweep.
+
+### Concurrency incident (no code damage) -> RUNBOOK D8
+- GC re-verify of P6 exit=1 was P7 coder's IN-FLIGHT shaders_gen edit
+  (P7CONST debug const, syntax error) - committed tree verified clean via
+  git show 5ff9410. Both coders notified (recall + protocol D8). GC GPU
+  verification of the P6 ladder deferred to post-P7 quiescent tree.
