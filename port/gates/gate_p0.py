@@ -70,7 +70,20 @@ for py in list((ROOT / "spike").rglob("*.py")):
     except Exception as e:
         ok, det = False, str(e)[:200]
     check(f"py_compile {py.relative_to(ROOT)}", ok, det)
-hits = [str(p.relative_to(ROOT)) for p in list((ROOT / "spike").rglob("*.py")) + list((ROOT / "engine_vr").rglob("*.py")) if "moderngl" in p.read_text(errors="ignore") and p.exists()]
+def _imports_moderngl(path):  # AST import check; substring hits are contract comments (gate_p2 lesson)
+    import ast as _ast
+    try:
+        tree = _ast.parse(path.read_text(errors="ignore"))
+    except SyntaxError:
+        return True
+    for n in _ast.walk(tree):
+        if isinstance(n, _ast.Import) and any(a.name.split(".")[0] == "moderngl" for a in n.names):
+            return True
+        if isinstance(n, _ast.ImportFrom) and (n.module or "").split(".")[0] == "moderngl":
+            return True
+    return False
+
+hits = [str(p.relative_to(ROOT)) for p in list((ROOT / "spike").rglob("*.py")) + list((ROOT / "engine_vr").rglob("*.py")) if _imports_moderngl(p)]
 check("no moderngl in new code", not hits, str(hits))
 
 # 6. diff discipline (GC-run git; agents never git)
