@@ -322,7 +322,8 @@ No probe was run.
 cd /path/to/procedural-alpine-lake && .venv/bin/python -c "
 import numpy as np
 from engine_vr import erosion_vr as ev
-out = ev.run_erosion(cell_m=4.0, stages=[ev.STAGES[0]], save=False)
+out = ev.run_erosion(cell_m=4.0, stages=[ev.STAGES[0]], stop_after=512,
+                    save=False)
 h, fl = out['height'], out['flow']
 print('finite', bool(np.isfinite(h).all()), 'h', float(h.min()), float(h.max()),
       'flow_abs_sum', float(np.abs(fl).sum()))
@@ -356,7 +357,8 @@ print('finite', bool(np.isfinite(h).all()), 'h', float(h.min()), float(h.max()),
 cd /path/to/procedural-alpine-lake && VK_LOADER_LAYERS_ENABLE=VK_LAYER_KHRONOS_validation .venv/bin/python -c "
 import numpy as np
 from engine_vr import erosion_vr as ev
-out = ev.run_erosion(cell_m=4.0, stages=list(ev.STAGES[:2]), save=False)
+out = ev.run_erosion(cell_m=4.0, stages=list(ev.STAGES[:2]), stop_after=1024,
+                    save=False)
 print('finite', bool(np.isfinite(out['height']).all()), 'flow_abs_sum', float(np.abs(out['flow']).sum()))
 "
 ```

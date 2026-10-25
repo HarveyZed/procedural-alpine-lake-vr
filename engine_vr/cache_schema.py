@@ -155,8 +155,15 @@ RENDER_REQUIRED = ("h_far.npy", "h_near.npy", "water_level.npy", "forest.npy")
 
 
 def path(name) -> Path:
-    """Cache-dir-relative path for a contract name (or a bare file name)."""
-    return CACHE / str(name)
+    """Cache-dir-relative path for a contract name (or a bare file name).
+
+    Accepts bare stems like spec() does ("h_far" -> h_far.npy): erosion_vr
+    calls cs.path("h_far_raw") and the raw.exists() probe silently missed the
+    real h_far_raw.npy otherwise (first-run fix 2026-10-25)."""
+    key = str(name)
+    if key.endswith(".npy") is False and f"{key}.npy" in FILES:
+        key = f"{key}.npy"
+    return CACHE / key
 
 
 def spec(name: str) -> dict:

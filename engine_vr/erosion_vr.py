@@ -1672,7 +1672,8 @@ def erode(hfar, cell_m, stages=None, log=print, debug=None, prot=None, stop_afte
             # full resolution flow map on the final terrain
             t1 = time.time()
             h = hb + hs
-            g = r // prev_res
+            g = r // prev_res if prev_res else 1  # FIXME(first-run): a ladder that
+            # starts AT the final level has no coarser prev to upsample from
             mroute = np.zeros(h.shape + (2,), np.float32)
             mroute[..., 1] = prot["route"]
             fsim = Sim(hb, hs, mroute, None, cell, fluvial=False)
