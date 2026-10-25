@@ -1057,6 +1057,48 @@ def _render(args, w, h, eye_tags, frames=None, on_frame=None):   # FIXME(p11)
 
             n = max(1, int(args.spp))
             acc_img = acc.images[0]
+            # ---- PHASE_12 per-sample shutter spread (FIXME(p12)) ------
+            # spec["samples"] is film.py:77-81 per-sample {time,pos,tgt,
+            # roll} (built in _animate_main from the ENGINE
+            # camera_path.shot_camera evaluated at tl_s). It mirrors
+            # engine/render.py:430-463: render() takes ONE CAMERA + ONE
+            # uTime PER SAMPLE ("cams/times: one per sample (for motion
+            # blur)", render.py:431) and sets uTime=times[s]
+            # (render.py:459 via _look_uniforms), uCamPos (render.py:462)
+            # and uCamRot (render.py:463) INSIDE the sample loop, while the
+            # accumulation buffer is cleared once for the whole sample run
+            # (render.py:452) and divided by n at render.py:505. The halton
+            # jitter below is UNTOUCHED, so a --shutter 0 frame differs from
+            # PHASE_11 by nothing at all. The static path (frames=None) has
+            # no "samples" key: per_sample is empty and every field keeps
+            # its PHASE_11 value.
+            per_sample = spec.get("samples") or []   # FIXME(p12)
+            # FIXME(p12): per-sample eye origins (pano.stereo_pair with the
+            # PER-SAMPLE camera-right, stereo best-effort) and per-sample
+            # uCamRot. With no samples these lists alias the frame-level
+            # origins / camrot objects, so mono AND sbs read arrays that are
+            # identical to P11 - bit-for-bit.
+            origins_s = []
+            rot_s = []
+            for s in range(n):
+                sp = per_sample[s] if s < len(per_sample) else None
+                if sp is None:
+                    origins_s.append(origins)
+                    rot_s.append(camrot)
+                    continue
+                p_s = np.asarray(sp["pos"], np.float64)
+                t_s = np.asarray(sp["tgt"], np.float64)
+                o_s = {"mono": p_s}
+                if "sbs" in eye_tags or len(eye_tags) == 2:
+                    fw = t_s - p_s
+                    fw = fw / np.linalg.norm(fw)
+                    rt = np.cross([0.0, 1.0, 0.0], fw)
+                    rt = rt / np.linalg.norm(rt)
+                    ol, orr, _d = pano.stereo_pair(p_s, dirs_shared, rt)
+                    o_s["left"], o_s["right"] = ol, orr
+                origins_s.append(o_s)
+                rot_s.append(basis(p_s, t_s, float(sp["roll"])).astype(
+                    np.float32))
             sample_fields = {}
             for s in range(n):
                 # copied from engine/render.py:453-457 (halton jitter)
@@ -1065,6 +1107,14 @@ def _render(args, w, h, eye_tags, frames=None, on_frame=None):   # FIXME(p11)
                 f = dict(lookf)
                 f.update(scene_extra_fields(w, h, sun, sky, hor, pos, camrot,
                                             (jx, jy), s))
+                if per_sample:
+                    # FIXME(p12): film.py:80-83 - the sample gets its own
+                    # camera AND its own uTime (the same tl_s that
+                    # shot_camera consumed, film.py:83).
+                    sp = per_sample[s]
+                    f["uTime"] = float(sp["time"])
+                    f["uCamPos"] = tuple(map(float, origins_s[s]["mono"]))
+                    f["uCamRot"] = rot_s[s]
                 sample_fields[s] = f
 
             eye_hdr = {}
@@ -1077,7 +1127,18 @@ def _render(args, w, h, eye_tags, frames=None, on_frame=None):   # FIXME(p11)
                 _clear_images(host, [acc.images[0]])
                 for s in range(n):
                     f = dict(sample_fields[s])
-                    f["uCamPos"] = tuple(map(float, origins[tag]))
+                    # FIXME(p12): per-sample EYE origin. origins_s[s] is the
+                    # frame origin when the frame carries no samples (bit-
+                    # identical to PHASE_11) and that sample own
+                    # pano.stereo_pair origin when it does. The FIXME(p8)
+                    # per-eye clear invariant below is UNTOUCHED: the clear
+                    # still runs ONCE per eye, the kind passes still blend
+                    # ONE,ONE into that one accumulation, and the readback
+                    # still divides by n - exactly engine/render.py:452
+                    # (clear once) + 455-463 (one camera per sample) + 505
+                    # (/ n). The shutter changes WHICH camera a sample uses,
+                    # never how many accumulations a frame owns.
+                    f["uCamPos"] = tuple(map(float, origins_s[s][tag]))
                     for pname in names:
                         pv.write_uniforms(
                             built[pname],
@@ -1236,6 +1297,41 @@ def _animate_main(args, ap, w, h):   # FIXME(p11)
     def tl_of(f):
         return float(np.clip(f / fps, 0.0, dur - 1e-4))  # film.py:79
 
+    # ---- PHASE_12 per-sample shutter spread (FIXME(p12)) -----------------
+    # film.py frame_samples is the contract owner for what a frame's spp
+    # samples ARE (film.py:75-81, args.shutter from film.py:36):
+    #   shut = args.shutter / FPS                                  film.py:76
+    #   off  = ((s + 0.5) / spp - 0.5) * shut if spp > 1 else 0.0  film.py:78
+    #   tl_s = clip(t0 + off, 0.0, shot["dur"] - 1e-4)             film.py:79
+    #   cam_s = shot_camera(shot, tl_s)                            film.py:80
+    #   time_s = starts[i] + tl_s + time_offset  -> tl_s here      film.py:83
+    #          (single-shot clip, starts[0] = 0, skim has no
+    #           time_offset: the global film time equals the local one, so
+    #           tl_s is BOTH the camera parameter and uTime - the same
+    #           value the camera consumed, exactly as film.py:83 wants)
+    # Import-over-math: every tl_s is evaluated by the ENGINE's own
+    # camera_path.shot_camera (shake noise included, camera_path.py:84-96).
+    # No new renders: spp is unchanged, the SAME samples just no longer share
+    # one camera / one uTime. shutter == 0 or spp == 1 collapses every tl_s
+    # onto tl_of(f), i.e. the PHASE_11 single-camera frame.
+    shutter = float(args.shutter)
+    n_spp = max(1, int(args.spp))
+
+    def sample_taus(t0):
+        """film.py:77-79 sample times of the frame whose centre is t0."""
+        if n_spp <= 1:
+            return None      # film.py:78: spp == 1 -> off = 0.0, one sample
+        shut = shutter / fps                    # film.py:76 (FPS == --fps)
+        return [float(np.clip(t0 + ((s + 0.5) / n_spp - 0.5) * shut,
+                              0.0, dur - 1e-4)) for s in range(n_spp)]
+
+    if args.no_shake:   # FIXME(vr-tune) HMD has no static frame of
+        # reference: the engine's gentle drone shake (shots_film
+        # shake=0.16 deg on skim) reads as the WHOLE world swaying and is
+        # a standard VR-motion-sickness trigger. Neutralize the shot dict
+        # copy only (CPU-side field; engine untouched, film unchanged).
+        shot = dict(shot)
+        shot["shake"] = 0.0
     cams = [sc(shot, tl_of(f)) for f in range(frame_count)]
 
     # ---- CPU shot probe BEFORE any GPU use (PHASE_11 evidence spec) ----
@@ -1259,6 +1355,18 @@ def _animate_main(args, ap, w, h):   # FIXME(p11)
     probe_path.write_text(json.dumps(probe, indent=1) + chr(10))
     print("SHOT PROBE (CPU, pre-GPU): " + json.dumps(probe, sort_keys=True))
 
+    # ---- PHASE_12 shutter statement BEFORE any GPU use (FIXME(p12)) ----
+    # What the exposure window of this run actually is, and how far the
+    # first rendered frame samples spread across it (film.py:76-79).
+    shut_s = (shutter / fps) if n_spp > 1 else 0.0
+    lo_pre = min(max(0, int(args.start_frame)), frame_count - 1)
+    _taus0 = sample_taus(tl_of(lo_pre))
+    span_s = 0.0 if not _taus0 else abs(_taus0[0] - _taus0[-1])
+    print("SHUTTER (CPU, pre-GPU): " + json.dumps(
+        {"shutter_fraction": shutter, "shutter_s": shut_s,
+         "spp": n_spp, "frame_sample_spread_s": span_s,
+         "per_sample_camera": bool(_taus0)}, sort_keys=True))
+
     # ---- frame window + resume (skip existing frame_%05d.png) ----
     lo = max(0, int(args.start_frame))
     hi = frame_count if args.max_frames <= 0 else min(
@@ -1268,10 +1376,25 @@ def _animate_main(args, ap, w, h):   # FIXME(p11)
         if (frames_dir / ("frame_%05d.png" % fr)).exists():
             skipped += 1
             continue
-        specs.append({"time": tl_of(fr),
-                      "pos": np.asarray(cams[fr].pos, np.float64),
-                      "tgt": np.asarray(cams[fr].target, np.float64),
-                      "roll": float(cams[fr].roll), "frame": fr})
+        # FIXME(p12): the frame-level pos/tgt/roll below stay the PHASE_11
+        # centre-camera (they feed the light probe, which film.py also probes
+        # once per frame at render.py:440); "samples" adds film.py:77-81's
+        # per-sample camera set that the accumulation loop consumes.
+        spec = {"time": tl_of(fr),
+                "pos": np.asarray(cams[fr].pos, np.float64),
+                "tgt": np.asarray(cams[fr].target, np.float64),
+                "roll": float(cams[fr].roll), "frame": fr}
+        taus = sample_taus(tl_of(fr))
+        if taus is not None:
+            cs_ = []
+            for tt in taus:                      # film.py:80 per sample
+                c = sc(shot, tt)
+                cs_.append({"time": tt,
+                            "pos": np.asarray(c.pos, np.float64),
+                            "tgt": np.asarray(c.target, np.float64),
+                            "roll": float(c.roll)})
+            spec["samples"] = cs_
+        specs.append(spec)
 
     exp_key = "%s_%dx%d_spp%d_fps%d" % (shot["name"], w, h, args.spp, fps)
     exp_file = frames_dir / "p11_exposure.json"
@@ -1314,7 +1437,12 @@ def _animate_main(args, ap, w, h):   # FIXME(p11)
                 "res": str(w) + "x" + str(h), "spp": args.spp,
                 "stereo": args.stereo, "rendered": rendered[0],
                 "skipped_existing": skipped, "start_frame": lo,
-                "exposure": exposure, "encode_argv": argv}
+                "exposure": exposure, "encode_argv": argv,
+                # FIXME(p12): what the shutter of this run was
+                "shutter_fraction": shutter,
+                "shutter_s": shut_s,
+                "frame_sample_spread_s": span_s,
+                "per_sample_camera": bool(_taus0)}
     (frames_dir / "p11_manifest.json").write_text(
         json.dumps(manifest, indent=1) + chr(10))
     print("ENCODE (printed argv only, never spawned): " + line)
@@ -1367,6 +1495,9 @@ def main(argv=None):
                     help="override the shot duration (default: its own)")
     ap.add_argument("--start-frame", dest="start_frame", type=int,
                     default=0, help="first frame index to render")
+    ap.add_argument("--no-shake", action="store_true",
+                    help="animate: drop the engine drone-shake angle "
+                         "(VR comfort; FIXME(vr-tune))")
     ap.add_argument("--max-frames", dest="max_frames", type=int,
                     default=0, help="render at most N frames this run "
                     "(0 = all; for kill/restart batching)")
@@ -1376,6 +1507,18 @@ def main(argv=None):
                     default=None, metavar="DIR",
                     help="PHASE_11 debug only: also dump raw per-frame "
                          "HDR (hdr_00000.npy) into DIR")
+    # ---- PHASE_12 180-degree shutter (FIXME(p12)) ----
+    # film.py:36 is the contract owner: "--shutter, fraction of frame time
+    # (180 deg)", default 0.5. The spp samples of an animated frame are
+    # spread across it (film.py:75-81), which is the film-era motion blur.
+    # --shutter 0 collapses the spread and reproduces PHASE_11 exactly.
+    # Static renders never read it (the frames=None path has no samples).
+    ap.add_argument("--shutter", type=float, default=0.5,
+                    help="animate: shutter as a FRACTION of the frame time "
+                         "(film.py:36, default 0.5 = 180 deg); the spp "
+                         "samples get one camera + one uTime each across it "
+                         "(film.py:77-81) - same spp budget, same render "
+                         "count. 0 = zero-duration shutter (PHASE_11).")
     args = ap.parse_args(argv)
     if args.cache:
         cs.set_cache_dir(args.cache)
