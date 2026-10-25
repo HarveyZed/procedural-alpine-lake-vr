@@ -1045,6 +1045,12 @@ def _render(args, w, h, eye_tags):
 
         eye_hdr = {}
         for tag in eye_tags:
+            # FIXME(p8): BUG B - the accumulation buffer must be zero per eye.
+            # It was cleared ONCE above (line ~961) while the kind passes blend
+            # ONE,ONE (vr.py blend=True below), so the SECOND eye read back
+            # (first + second)/n - the delivered pano_vp1_sbs.png right eye was
+            # 2x the left in raw HDR (post/reports/phase8.md bisect E0/E1/E2).
+            _clear_images(host, [acc.images[0]])
             for s in range(n):
                 f = dict(sample_fields[s])
                 f["uCamPos"] = tuple(map(float, origins[tag]))

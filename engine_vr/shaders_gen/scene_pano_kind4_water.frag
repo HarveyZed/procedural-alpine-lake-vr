@@ -11032,7 +11032,7 @@ Hit trace(vec3 ro, vec3 rd, float tmin, float tmax, bool withWater, bool withTre
     // (works), 7.67e-4 at 8192x4096 (device-lost) - and the same 8192 footprint at 640x320 reproduces
     // the loss. The bound below sits in the measured gap, so the cap cannot bind on a render that
     // already completes; it only bounds marches that today end in a force-killed device.
-    if (gPixAng < 9.0e-4) maxSteps = min(maxSteps, 100);
+    // FIXME(p8): BUG A cap ladder step=none - P6's 100-step cap removed (port/reports/phase8.md)
 
 for (int i = 0; i < maxSteps; i++) {
         vec3 p = ro + rd * t;
