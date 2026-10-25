@@ -171,3 +171,12 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   pkg_sbs/turntable_4096x2048_sbs_half.mp4 (8s, hevc, tagged). 8K-class
   delivery = same flow, vr.py 8192/eye + package --packing full.
 - FIRST-RUN A: COMPLETE. All ladder steps green on quiescent tree @ p7-pass.
+
+### Gate semantics correction (GC)
+- gate_p6/gate_p7 are POINT-IN-TIME review gates: they REQUIRE their
+  phase's uncommitted diff (marker + shader-compile audit), so they FAIL on
+  a clean tree by design. Steady-state regression suite = gates p1..p5.
+- gate_p5's dry-run globs engine_vr/out/*.png: delivery PNGs must live in
+  pkg_mono/pano/ + pkg_sbs/pano/ (package_vr already puts them there);
+  flat out/ kept mono-only. Corrects the earlier 'all 7 PASS on clean
+  tree' line (P6/P7 runs at that moment were pre-commit, as designed).
