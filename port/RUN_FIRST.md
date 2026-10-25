@@ -887,3 +887,5 @@ whether validation was enabled, the matrix row you matched, and which report
 that row cites. That is enough for a fix round without a second GPU session.
 
 ### Recipe erratum (2026-10-25): §8 encode metadata must be CONTAINER-level ("-metadata k=v", kept +use_metadata_tags); the original "-metadata:s:v:0" argv is dropped by ffmpeg 9 in MP4. Verified 2026-10-25.
+
+### §4 cost correction (P8): full-res 8192x4096 mono = 220.8 s / 1 spp no-cap (+30

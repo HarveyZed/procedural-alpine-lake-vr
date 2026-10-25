@@ -180,3 +180,23 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   pkg_mono/pano/ + pkg_sbs/pano/ (package_vr already puts them there);
   flat out/ kept mono-only. Corrects the earlier 'all 7 PASS on clean
   tree' line (P6/P7 runs at that moment were pre-commit, as designed).
+
+## P8 RE-DELIVERY (GC, 2026-10-25 19:43-19:52)
+- User visual QA found 2 bugs -> PHASE_8 (see phase8.md): A) P6 100-step cap
+  truncated far-mountain rays -> tile-shaped sky holes (visible at 8192,
+  footprint 7.67e-4); B) per-eye acc never re-zeroed -> RIGHT eye carried
+  (L+R)/n = 2x radiance in every stereo delivery. Fixes reviewed + accepted
+  (per-eye _clear_images vr.py:1048-1053; cap removed one-liner
+  scene.frag:71, guards stand, SPIR-V film parity 38/38). Commit + p8-pass.
+- RE-RENDERED + REPACKAGED (no cap): mono 8192x4096 exit0 WALL 220.8 s
+  (was 169.4 s with truncating cap: +30% full-res real cost; repro-level
+  +58% underestimates), RSS 19.06 GiB flat; SBS vp1 exit0 ~200 s.
+- ACCEPTANCE METRICS (new): MONO mean 95.8 nonblack 99.9% seam 8.16,
+  ridge crop continuous - tile holes GONE. SBS band L/R ratios sky 1.0026
+  horizon 1.0036 ground 0.9889 (ground 1.1% = genuine 0.032 m parallax;
+  sameorigin control bit-identical), mean|L-R| 13.49 (was 27.96 with bug).
+- mp4 re-encoded: 6 projection/stereo container tags verified; manifests
+  regenerated. Old buggy SBS+mp4 DELETED, replaced.
+- NOTE: package_vr has NO --stereo flag (auto-detects stereo from aspect);
+  stereo=sbs_half confirmed in new manifest. Metrics banding must use
+  per-eye height for SBS files (GC scripted that wrong mid-check).
