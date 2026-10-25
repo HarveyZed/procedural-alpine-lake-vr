@@ -200,3 +200,15 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
 - NOTE: package_vr has NO --stereo flag (auto-detects stereo from aspect);
   stereo=sbs_half confirmed in new manifest. Metrics banding must use
   per-eye height for SBS files (GC scripted that wrong mid-check).
+
+## PHASE 11 FLOW TEST (GC, 2026-10-25 21:16-21:29) - PASS
+- Static byte-parity: vr.py@HEAD 与 P11 版各渲 640x320 vp0 -> sha256 相同
+  (4652a627...343578). 静态路径零漂移 (P11 未复制任何相机/路径数学:
+  engine_vr/shots_shim.py 把 engine/ 挂 sys.path, moderngl 缺失时 stub)。
+- skim clip: 78 帧 2048x1024@1spp 12fps dur 6.5s, 首跑至 frame35 SIGTERM,
+  续跑 skipped=36 rendered=42 -> 78/78; 曝光缓存 0.808678466575212;
+  encode exit0 10.1 MiB hevc + projection tags。
+- 运动: meanabs(A-B)=22.5 (B-C)=22.9 (A-C)=28.3; 水带窗口 6.3; 首末帧
+  同向位移可见 (tmp/p11_v0/p11_v77.png)。预算实测 11.3 min/78帧 ≈ 8.7 s/帧
+  @2048x1024, 比线性外推便宜 ~7x (单帧成本非纯像素线性, 静态帧锥预热摊薄)。
+- 待用户定档: 4096x2048@24fps 全片 9 镜。

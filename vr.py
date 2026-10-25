@@ -867,13 +867,19 @@ def _clear_images(host, imgs):
     host.end()
 
 
-def _render(args, w, h, eye_tags):
+def _render(args, w, h, eye_tags, frames=None, on_frame=None):   # FIXME(p11)
     """Run the render chain. Returns {tag: (h, w, 3) float32 hdr, top row
     = lat +90 (display orientation, after the copied render.py:505 flip).
 
     Mono and SBS both call this ONCE per eye over shared host / world
     textures / bakes / light probe / sample order: the only per-eye input
     is uCamPos. That is the same-seed contract (RUNBOOK 6).
+
+    PHASE_11 (FIXME(p11)): frames=None keeps the single-frame static path
+    byte-behaving; animated mode passes one spec per frame {time, pos,
+    tgt, roll, frame} (engine camera_path.shot_camera via
+    engine_vr/shots_shim) and consumes per-frame HDR through the on_frame
+    callback, keeping host/textures/bakes open across the clip.
     """
     from engine_vr import passes_vr as pv
     from engine_vr import bake_vr
@@ -997,115 +1003,136 @@ def _render(args, w, h, eye_tags):
                  "uGBuf1": (gt1, "nearest", "clamp")}))
         host.write_descriptors(built["probe"], samplers=bind("probe"))
 
-        # ---- light probe ONCE (copied from engine/render.py:420-427;
-        # the engine probes a single camera position per frame - the film
-        # passes cams[0].pos. FIXME(port): the pano takes that head-centre
-        # probe for BOTH eyes; the 0.032 m eye parallax of the sky probe is
-        lookf = _look_fields(look, 0.0, world.features, heroes)
-        pm = set(ubo_member_names(progs["probe"]))
-        # NOTE(first-run): NO host.begin() here - host.draw() below is a
-        # one-shot session (draw(cmd=None) owns begin/end, gl_vr.py:1281);
-        # wrapping it in an external session raised "command session
-        # already active". Uniform writes need no command buffer.
-        pf = dict(lookf)
-        pf["uProbePos"] = tuple(map(float, pos))
-        pv.write_uniforms(built["probe"], {k: v for k, v in pf.items()
-                                           if k in pm})
-        ptar = host.make_target(3, 1, 1, pv.TARGET_FORMAT,
-                                "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL")
-        host.draw(built["probe"], ptar, rect=(0, 0, 3, 1), cleared=True)
-        pa = pv.read_image(ptar.images[0])[0]
-        sun, sky, hor = pa[0][:3], pa[1][:3], pa[2][:3]
-
-        # ---- eyes: shared everything, uCamPos differs (pano.stereo_pair) ----
-        fwd = tgt - pos
-        fwd = fwd / np.linalg.norm(fwd)
-        right = np.cross([0.0, 1.0, 0.0], fwd)
-        right = right / np.linalg.norm(right)
-        dirs_shared = np.zeros((1, 3), np.float32)   # SHARED dirs (value
-        # inert here: the GPU builds dirs from the PANO branches; the
-        # contract still routes origins through pano.stereo_pair)
-        origins = {"mono": pos}
-        if "sbs" in eye_tags or len(eye_tags) == 2:
-            o_l, o_r, _d = pano.stereo_pair(pos, dirs_shared, right)
-            origins["left"], origins["right"] = o_l, o_r
-        camrot = basis(pos, tgt, vp["roll"]).astype(np.float32)
-
-        n = max(1, int(args.spp))
-        acc_img = acc.images[0]
-        sample_fields = {}
-        for s in range(n):
-            # copied from engine/render.py:453-457 (halton jitter)
-            jx, jy = ((halton(s + 1, 2) - 0.5, halton(s + 1, 3) - 0.5)
-                      if n > 1 else (0.0, 0.0))
-            f = dict(lookf)
-            f.update(scene_extra_fields(w, h, sun, sky, hor, pos, camrot,
-                                        (jx, jy), s))
-            sample_fields[s] = f
-
+        # ---- per-frame block (PHASE_11) --------------------------------
+        # Animated mode (vr.py --animate) passes one spec per frame:
+        # {time, pos, tgt, roll, frame} evaluated by the ENGINE's
+        # camera_path.shot_camera through the engine_vr/shots_shim
+        # import-over-copy. Static mode passes frames=None and gets the
+        # single pre-P11 spec (viewpoint-table pos/tgt, roll=vp[roll],
+        # time 0.0), so the GPU statement sequence below is IDENTICAL for
+        # --viewpoint renders. FIXME(p11)
+        if frames is None:
+            specs = [{"time": 0.0, "pos": pos, "tgt": tgt,
+                      "roll": vp["roll"], "frame": 0}]
+        else:
+            specs = list(frames)
         eye_hdr = {}
-        for tag in eye_tags:
-            # FIXME(p8): BUG B - the accumulation buffer must be zero per eye.
-            # It was cleared ONCE above (line ~961) while the kind passes blend
-            # ONE,ONE (vr.py blend=True below), so the SECOND eye read back
-            # (first + second)/n - the delivered pano_vp1_sbs.png right eye was
-            # 2x the left in raw HDR (post/reports/phase8.md bisect E0/E1/E2).
-            _clear_images(host, [acc.images[0]])
+        for spec in specs:   # FIXME(p11)
+            pos = np.asarray(spec["pos"], np.float64)
+            tgt = np.asarray(spec["tgt"], np.float64)
+            # ---- light probe ONCE (copied from engine/render.py:420-427;
+            # the engine probes a single camera position per frame - the film
+            # passes cams[0].pos. FIXME(port): the pano takes that head-centre
+            # probe for BOTH eyes; the 0.032 m eye parallax of the sky probe is
+            lookf = _look_fields(look, spec["time"], world.features, heroes)
+            pm = set(ubo_member_names(progs["probe"]))
+            # NOTE(first-run): NO host.begin() here - host.draw() below is a
+            # one-shot session (draw(cmd=None) owns begin/end, gl_vr.py:1281);
+            # wrapping it in an external session raised "command session
+            # already active". Uniform writes need no command buffer.
+            pf = dict(lookf)
+            pf["uProbePos"] = tuple(map(float, pos))
+            pv.write_uniforms(built["probe"], {k: v for k, v in pf.items()
+                                               if k in pm})
+            ptar = host.make_target(3, 1, 1, pv.TARGET_FORMAT,
+                                    "VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL")
+            host.draw(built["probe"], ptar, rect=(0, 0, 3, 1), cleared=True)
+            pa = pv.read_image(ptar.images[0])[0]
+            sun, sky, hor = pa[0][:3], pa[1][:3], pa[2][:3]
+
+            # ---- eyes: shared everything, uCamPos differs (pano.stereo_pair) ----
+            fwd = tgt - pos
+            fwd = fwd / np.linalg.norm(fwd)
+            right = np.cross([0.0, 1.0, 0.0], fwd)
+            right = right / np.linalg.norm(right)
+            dirs_shared = np.zeros((1, 3), np.float32)   # SHARED dirs (value
+            # inert here: the GPU builds dirs from the PANO branches; the
+            # contract still routes origins through pano.stereo_pair)
+            origins = {"mono": pos}
+            if "sbs" in eye_tags or len(eye_tags) == 2:
+                o_l, o_r, _d = pano.stereo_pair(pos, dirs_shared, right)
+                origins["left"], origins["right"] = o_l, o_r
+            # FIXME(p11): roll from the spec (static spec = vp["roll"])
+            camrot = basis(pos, tgt, spec["roll"]).astype(np.float32)
+
+            n = max(1, int(args.spp))
+            acc_img = acc.images[0]
+            sample_fields = {}
             for s in range(n):
-                f = dict(sample_fields[s])
-                f["uCamPos"] = tuple(map(float, origins[tag]))
-                for pname in names:
-                    pv.write_uniforms(
-                        built[pname],
-                        {k: v for k, v in f.items()
-                         if k in ubo_member_names(progs[pname])})
-                for y in range(0, h, args.tile):
-                    for x in range(0, w, args.tile):
-                        tw = min(args.tile, w - x)
-                        th = min(args.tile, h - y)
-                        cmd = host.begin()
-                        # cone at quarter res, copied from
-                        # engine/render.py:472-479
-                        host.draw(built[PANO_CONE], ct,
-                                  rect=(x // 4, y // 4, (tw + 3) // 4,
-                                        (th + 3) // 4), cmd=cmd)
-                        # FIXME(p7): the trace's single fragColor output
-                        # (kind payload) goes to gt0 slot 0; uGInfo stores
-                        # h.info into gt1 inside the same draw.
-                        host.draw(built[PANO_TRACE], gt0, rect=(x, y, tw,
-                                                                th),
-                                  cmd=cmd)
-                        host.end()
-                        # kind bits: gbuf attachment 0 component 1
-                        # (engine/render.py:484 reads components=2 then
-                        # takes [1::2])
-                        # FIXME(p7): kind bits from gt0 (was gbuf.images[0])
-                        kb = pv.read_image(gt0.images[0],
-                                           rect=(x, y, tw, th))
-                        kb = kb[..., 1]
-                        hit = np.unique(np.clip(kb.astype(np.int32), 0, 7))
-                        if hit.size:
-                            # FIXME(p7): only gt0 transitions; gt1 GENERAL
-                            pv.to_sampler_layout([gt0.images[0]])
+                # copied from engine/render.py:453-457 (halton jitter)
+                jx, jy = ((halton(s + 1, 2) - 0.5, halton(s + 1, 3) - 0.5)
+                          if n > 1 else (0.0, 0.0))
+                f = dict(lookf)
+                f.update(scene_extra_fields(w, h, sun, sky, hor, pos, camrot,
+                                            (jx, jy), s))
+                sample_fields[s] = f
+
+            eye_hdr = {}
+            for tag in eye_tags:
+                # FIXME(p8): BUG B - the accumulation buffer must be zero per eye.
+                # It was cleared ONCE above (line ~961) while the kind passes blend
+                # ONE,ONE (vr.py blend=True below), so the SECOND eye read back
+                # (first + second)/n - the delivered pano_vp1_sbs.png right eye was
+                # 2x the left in raw HDR (post/reports/phase8.md bisect E0/E1/E2).
+                _clear_images(host, [acc.images[0]])
+                for s in range(n):
+                    f = dict(sample_fields[s])
+                    f["uCamPos"] = tuple(map(float, origins[tag]))
+                    for pname in names:
+                        pv.write_uniforms(
+                            built[pname],
+                            {k: v for k, v in f.items()
+                             if k in ubo_member_names(progs[pname])})
+                    for y in range(0, h, args.tile):
+                        for x in range(0, w, args.tile):
+                            tw = min(args.tile, w - x)
+                            th = min(args.tile, h - y)
                             cmd = host.begin()
-                            for k in hit:
-                                # blend ONE,ONE accumulate, copied from
-                                # engine/render.py:498-503
-                                host.draw(built[names[2 + int(k)]], acc,
-                                          rect=(x, y, tw, th), blend=True,
-                                          cmd=cmd)
+                            # cone at quarter res, copied from
+                            # engine/render.py:472-479
+                            host.draw(built[PANO_CONE], ct,
+                                      rect=(x // 4, y // 4, (tw + 3) // 4,
+                                            (th + 3) // 4), cmd=cmd)
+                            # FIXME(p7): the trace's single fragColor output
+                            # (kind payload) goes to gt0 slot 0; uGInfo stores
+                            # h.info into gt1 inside the same draw.
+                            host.draw(built[PANO_TRACE], gt0, rect=(x, y, tw,
+                                                                    th),
+                                      cmd=cmd)
                             host.end()
-                pv.to_sampler_layout([gt0.images[0]])   # FIXME(p7)
-            a = pv.read_image(acc_img)[..., :3] / float(n)
-            # display flip, copied from engine/render.py:505 ([::-1]):
-            # GL row 0 (lat +90 readback bottom) -> image row 0 (top)
-            eye_hdr[tag] = np.ascontiguousarray(a[::-1])
+                            # kind bits: gbuf attachment 0 component 1
+                            # (engine/render.py:484 reads components=2 then
+                            # takes [1::2])
+                            # FIXME(p7): kind bits from gt0 (was gbuf.images[0])
+                            kb = pv.read_image(gt0.images[0],
+                                               rect=(x, y, tw, th))
+                            kb = kb[..., 1]
+                            hit = np.unique(np.clip(kb.astype(np.int32), 0, 7))
+                            if hit.size:
+                                # FIXME(p7): only gt0 transitions; gt1 GENERAL
+                                pv.to_sampler_layout([gt0.images[0]])
+                                cmd = host.begin()
+                                for k in hit:
+                                    # blend ONE,ONE accumulate, copied from
+                                    # engine/render.py:498-503
+                                    host.draw(built[names[2 + int(k)]], acc,
+                                              rect=(x, y, tw, th), blend=True,
+                                              cmd=cmd)
+                                host.end()
+                    pv.to_sampler_layout([gt0.images[0]])   # FIXME(p7)
+                a = pv.read_image(acc_img)[..., :3] / float(n)
+                # display flip, copied from engine/render.py:505 ([::-1]):
+                # GL row 0 (lat +90 readback bottom) -> image row 0 (top)
+                eye_hdr[tag] = np.ascontiguousarray(a[::-1])
+            if on_frame is not None:   # FIXME(p11) per-frame consumer
+                on_frame(int(spec["frame"]), eye_hdr)
         return eye_hdr
     finally:
         pv.close_host()
 
 
-def _post_save(stitched, vp, out_path):
+def _post_save(stitched, vp, out_path, seed=None,
+                 exposure=None):   # FIXME(p11)
     """Grade + tone-map + PNG.
 
     Copied from film.py:110 + 159-160 (suggest_exposure on the shot frame,
@@ -1117,14 +1144,185 @@ def _post_save(stitched, vp, out_path):
     grain pattern consistent across the seam.
     """
     g = _grade(vp["grade"])
-    e = post.suggest_exposure(stitched, target_luma=vp["target_luma"], g=g)
+    # PHASE_11 (FIXME(p11)): animated frames pass the run-cached exposure
+    # and the film.py grain seed (film.py:134 seed=f); both None here
+    # reproduce the static path exactly.
+    if exposure is None:
+        e = post.suggest_exposure(stitched, target_luma=vp["target_luma"],
+                                  g=g)
+    else:
+        e = float(exposure)
     img = post.finish(stitched, dataclasses.replace(g, exposure=e),
-                      seed=vp["seed"])
+                      seed=vp["seed"] if seed is None else int(seed))
     from PIL import Image
     p = Path(out_path)
     p.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(img).save(p)
     return e
+
+
+def _encode_argv(frames_dir, w, h, fps, n_frames):   # FIXME(p11)
+    """ffmpeg argv for the rendered frame sequence, built by package_vr's
+    OWN argv builder (import-over-copy - package_vr never spawns and this
+    module never spawns either; the line is PRINTED for the operator).
+
+    stereo=mono/packing=full is package_vr's classify() verdict for a 2:1
+    equirect; its filter chain halves mono input (scale=trunc(iw/2)*2 -
+    built for 8K SBS sources), disclosed in port/reports/phase11.md with a
+    1:1 one-liner alternative for test clips.
+    """
+    import argparse as _argparse
+    import package_vr
+    ns = _argparse.Namespace(
+        video=True, dry_run=True, packing="full", fps=int(fps),
+        start_number=0,
+        pattern=str(Path(frames_dir) / "frame_%05d.png"),
+        out=str(Path(frames_dir) / "clip.mp4"), out_dir=str(frames_dir),
+        codec="libx265", preset="slow", crf=22, pix_fmt="yuv420p",
+        scaler="spline", gop=120, hevc_params=None, still_seconds=2.0,
+        crop_lat=None, tag_pairs=[], note=None)
+    argv = package_vr.build_ffmpeg(ns.out, int(n_frames), ns, "mono",
+                                   "full", w, h)
+    return " ".join(package_vr.shell(a) for a in argv), argv
+
+
+def _animate_main(args, ap, w, h):   # FIXME(p11)
+    """PHASE_11: render an animated equirect CLIP - the engine's own shot.
+
+    Shot list: engine.shots_film.build(PanoWorld()) through the
+    engine_vr/shots_shim import-over-copy (zero keyframe / path-search
+    reimplementation); per-frame camera: engine.camera_path.shot_camera.
+    Time model mirrors film.py frame_samples for a single-shot clip:
+    frame f -> tl = clip(f/fps, 0, dur-1e-4) (film.py:79; with starts[0]=0
+    and spp=1 the intra-shutter sample offset is 0), tl is BOTH the camera
+    parameter and uTime (film.py:83: starts[i]+tl+time_offset == local
+    seconds here, skim has no time_offset), grain seed = f (film.py:134),
+    exposure measured once and cached beside the frames (film.py expo_for
+    parity - ours keys on the FIRST rendered frame, not the middle:
+    resume-stable, deviation disclosed). frame_count = round(dur*fps)
+    (film.py:120). Resume: existing frame_%05d.png skipped, writes via
+    tmp + rename (film.py:137-139). Mono is the verified path; --stereo
+    sbs reuses the same per-eye loop untested (phase11 residual).
+    """
+    from engine_vr import shots_shim
+
+    if args.dry_run:
+        ap.error("--dry-run is static-mode only")
+    if not args.frames_dir:
+        ap.error("--animate needs --frames-dir DIR")
+    frames_dir = Path(args.frames_dir)
+    frames_dir.mkdir(parents=True, exist_ok=True)
+
+    world = PanoWorld()
+    if world.features is None:
+        raise RuntimeError("features.json missing in " + str(cs.cache_dir()))
+    shots = shots_shim.build_shots(world)
+    shot = next((s for s in shots if s["name"] == args.shot), None)
+    if shot is None:
+        ap.error("--shot must name one of: " + ",".join(s["name"]
+                                                        for s in shots))
+    vp_idx = next((i for i, v in enumerate(VIEWPOINTS)
+                   if v["name"] == args.shot), None)
+    if vp_idx is None:
+        ap.error("VIEWPOINTS has no entry named " + args.shot)
+    args.viewpoint = vp_idx   # look/grade/target_luma == shots_film's
+    vp = VIEWPOINTS[vp_idx]
+
+    fps = max(1, int(args.fps))
+    dur = float(args.dur) if args.dur is not None else float(shot["dur"])
+    frame_count = max(1, int(round(dur * fps)))          # film.py:120
+    sc = shots_shim.shot_camera()
+
+    def tl_of(f):
+        return float(np.clip(f / fps, 0.0, dur - 1e-4))  # film.py:79
+
+    cams = [sc(shot, tl_of(f)) for f in range(frame_count)]
+
+    # ---- CPU shot probe BEFORE any GPU use (PHASE_11 evidence spec) ----
+    pmin = np.min([np.asarray(c.pos, np.float64) for c in cams], axis=0)
+    pmax = np.max([np.asarray(c.pos, np.float64) for c in cams], axis=0)
+    tmin = np.min([np.asarray(c.target, np.float64) for c in cams], axis=0)
+    tmax = np.max([np.asarray(c.target, np.float64) for c in cams], axis=0)
+
+    def _rng(a, b):
+        return {"x": [float(a[0]), float(b[0])],
+                "y": [float(a[1]), float(b[1])],
+                "z": [float(a[2]), float(b[2])]}
+
+    probe = {"shot": shot["name"], "dur_s": dur, "fps": fps,
+             "fps_default": 12, "frame_count": int(frame_count),
+             "t0": 0.0, "t1": tl_of(frame_count - 1),
+             "pos_range": _rng(pmin, pmax),
+             "target_range": _rng(tmin, tmax)}
+    probe_path = ROOT / "engine_vr" / "tmp" / "p11_shot_probe.json"
+    probe_path.parent.mkdir(parents=True, exist_ok=True)
+    probe_path.write_text(json.dumps(probe, indent=1) + chr(10))
+    print("SHOT PROBE (CPU, pre-GPU): " + json.dumps(probe, sort_keys=True))
+
+    # ---- frame window + resume (skip existing frame_%05d.png) ----
+    lo = max(0, int(args.start_frame))
+    hi = frame_count if args.max_frames <= 0 else min(
+        frame_count, lo + int(args.max_frames))
+    specs, skipped = [], 0
+    for fr in range(lo, hi):
+        if (frames_dir / ("frame_%05d.png" % fr)).exists():
+            skipped += 1
+            continue
+        specs.append({"time": tl_of(fr),
+                      "pos": np.asarray(cams[fr].pos, np.float64),
+                      "tgt": np.asarray(cams[fr].target, np.float64),
+                      "roll": float(cams[fr].roll), "frame": fr})
+
+    exp_key = "%s_%dx%d_spp%d_fps%d" % (shot["name"], w, h, args.spp, fps)
+    exp_file = frames_dir / "p11_exposure.json"
+    table = json.loads(exp_file.read_text()) if exp_file.exists() else {}
+    exposure = table.get(exp_key)
+    rendered = [0]
+
+    def on_frame(fi, eye_hdr):
+        nonlocal exposure
+        if "left" in eye_hdr:
+            stitched = np.concatenate([eye_hdr["left"], eye_hdr["right"]],
+                                      axis=1)
+        else:
+            stitched = eye_hdr["mono"]
+        if exposure is None:
+            g = _grade(vp["grade"])
+            exposure = float(post.suggest_exposure(
+                stitched, target_luma=vp["target_luma"], g=g))
+            table[exp_key] = exposure
+            tmp = exp_file.with_suffix(".tmp.json")
+            tmp.write_text(json.dumps(table, indent=1))
+            tmp.replace(exp_file)
+        if args.debug_save_hdr:
+            d = Path(args.debug_save_hdr)
+            d.mkdir(parents=True, exist_ok=True)
+            np.save(d / ("hdr_%05d.npy" % fi), stitched)
+        tmp_fn = frames_dir / ("frame_%05d.tmp.png" % fi)
+        _post_save(stitched, vp, tmp_fn, seed=fi, exposure=exposure)
+        tmp_fn.replace(frames_dir / ("frame_%05d.png" % fi))
+        rendered[0] += 1
+        print("frame %05d t=%.4f uTime=%.4f" % (fi, tl_of(fi), tl_of(fi)),
+              flush=True)
+
+    if specs:
+        _render(args, w, h, ["mono"] if args.stereo == "mono"
+                else ["left", "right"], frames=specs, on_frame=on_frame)
+    line, argv = _encode_argv(frames_dir, w, h, fps, frame_count)
+    manifest = {"shot": shot["name"], "dur_s": dur, "fps": fps,
+                "frame_count": int(frame_count),
+                "res": str(w) + "x" + str(h), "spp": args.spp,
+                "stereo": args.stereo, "rendered": rendered[0],
+                "skipped_existing": skipped, "start_frame": lo,
+                "exposure": exposure, "encode_argv": argv}
+    (frames_dir / "p11_manifest.json").write_text(
+        json.dumps(manifest, indent=1) + chr(10))
+    print("ENCODE (printed argv only, never spawned): " + line)
+    print(json.dumps({"frames_dir": str(frames_dir), "shot": shot["name"],
+                      "rendered": rendered[0], "skipped_existing": skipped,
+                      "frame_count": int(frame_count), "fps": fps,
+                      "dur_s": dur, "exposure": exposure}))
+    return 0
 
 
 def main(argv=None):
@@ -1155,6 +1353,29 @@ def main(argv=None):
     ap.add_argument("--dry-run", action="store_true",
                     help="print the render plan as JSON and exit "
                          "(never opens the GPU)")
+    # ---- PHASE_11 animated clip (FIXME(p11)) ----
+    ap.add_argument("--animate", action="store_true",
+                    help="render the --shot animated equirect clip into "
+                         "--frames-dir as frame_00000.png style frames "
+                         "(static modes unchanged; --dry-run static-only)")
+    ap.add_argument("--shot", default="skim", metavar="NAME",
+                    help="animated shot name from engine.shots_film.build "
+                         "(default skim, film index 2)")
+    ap.add_argument("--fps", type=int, default=12,
+                    help="animated clip frames per second (default 12)")
+    ap.add_argument("--dur", type=float, default=None, metavar="SEC",
+                    help="override the shot duration (default: its own)")
+    ap.add_argument("--start-frame", dest="start_frame", type=int,
+                    default=0, help="first frame index to render")
+    ap.add_argument("--max-frames", dest="max_frames", type=int,
+                    default=0, help="render at most N frames this run "
+                    "(0 = all; for kill/restart batching)")
+    ap.add_argument("--frames-dir", dest="frames_dir", default=None,
+                    metavar="DIR", help="animated output directory")
+    ap.add_argument("--debug-save-hdr", dest="debug_save_hdr",
+                    default=None, metavar="DIR",
+                    help="PHASE_11 debug only: also dump raw per-frame "
+                         "HDR (hdr_00000.npy) into DIR")
     args = ap.parse_args(argv)
     if args.cache:
         cs.set_cache_dir(args.cache)
@@ -1185,6 +1406,8 @@ def main(argv=None):
             ap.error("--debug-foot-res WxH needs W >= 2H (same rule as --res)")
         foot_src = (fw, fh)
         args.debug_foot_src = foot_src
+    if args.animate:   # FIXME(p11) animated clip path
+        return _animate_main(args, ap, w, h)
     vp = VIEWPOINTS[args.viewpoint]
     if args.dry_run:
         summary, detail = _plan(args, w, h)
