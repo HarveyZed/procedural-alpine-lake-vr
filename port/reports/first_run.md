@@ -117,3 +117,22 @@ Self-test A/B (fakecache 12/0) gave exit 1/0 as specified BEFORE trusting the to
   (P7CONST debug const, syntax error) - committed tree verified clean via
   git show 5ff9410. Both coders notified (recall + protocol D8). GC GPU
   verification of the P6 ladder deferred to post-P7 quiescent tree.
+
+### P7 COMPLETE + ACCEPTED (commit c3c8bff, tags p6-pass@5ff9410 p7-pass)
+- Root cause A = platform divergence: MoltenVK 1.4.2 delivers ONLY the
+  highest-LOC written fragment output, into slot 0 (probes tmp/p7probe2/3/5/7;
+  MTL_DEBUG_LAYER overlap assert; MVK dump exonerates SPIRV-Cross; no upstream
+  citation - locally measured). GL-era truth pair scene.frag:280-281 +
+  render.py:484. Fix: pano trace single output -> gt0; h.info -> uGInfo
+  imageStore -> gt1 (GENERAL forever, submit+wait fence). Film #else literal;
+  parity 28/28 byte-identical. Kind proof vp0 {0..5} water 2522px; vp2 water
+  50%. Bug B was a downstream symptom (sampling never-written memory): two
+  identical 640 renders now byte-identical. Disclosed cap violation: one
+  accidental full 8192x4096 render COMPLETED (wrapper bug, artifact deleted)
+  - first sign full-res survives P6+P7.
+- Gate interference found+fixed during sweep: gate_p2-4 ruff caught 2 E501
+  from first-run passes_vr fixes (wrapped); gate_p5 dry-run tripped by mixed
+  mono+SBS leftovers in engine_vr/out/ (deleted - sky-only void artifacts).
+  All 7 gates PASS on clean tree.
+- GC verification battery running (tmp/gcverify.log): A/B determinism recheck,
+  C P6 repro signal, D kinds, E #13 FULL 8192x4096 + RSS/wall.
