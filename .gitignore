@@ -13,3 +13,11 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.ruff_cache/
+
+# VR port: working dirs, workspace-local toolchain, harness files
+engine_vr/tmp/
+tools/vk/
+tools/spatial-media/
+.DS_Store
+PROJECT_MEMORY.md

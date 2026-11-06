@@ -1,5 +1,7 @@
 # Procedural Alpine Lake
 
+> **VR port (this fork):** an Apple Silicon / MoltenVK port that turns the film into 360° VR panoramas (mono / SBS / 48 fps video). User manual: [`port/README_VR.md`](port/README_VR.md); full porting contract & log: [`port/RUNBOOK.md`](port/RUNBOOK.md). Everything below is the original upstream README.
+
 ![Reveal shot](docs/img/02_reveal.jpg)
 
 A 60 second cinematic flight through an alpine lake valley, rendered entirely from code.
